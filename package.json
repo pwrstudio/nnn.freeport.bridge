@@ -22,7 +22,7 @@
     "prismic.io": "^3.6.1",
     "request": "^2.83.0",
     "to-markdown": "^3.1.1",
-    "web3": "^1.0.0-beta.26"
+    "web3": "1.0.0-beta.20"
   },
   "devDependencies": {
     "jest": "^21.2.1",

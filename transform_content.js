@@ -38,29 +38,56 @@ const transformContent = data => {
       if (tempContent.media === 'Text') {
         // TODO: convert text object to markdown
         let textPromise = addText(
-          toMarkdown(
-            PrismicDOM.RichText.asHtml(contentPost.data['content.text'].value)
-          )
+          toMarkdown(PrismicDOM.RichText.asHtml(contentPost.data['content.text'].value))
         )
         contentPromiseArray.push(textPromise)
         textPromise.then(ipfs => {
           tempContent.ipfs = ipfs
-          data.transformed.content.push(tempContent)
+          let baseContent = {}
+          baseContent.hash = ipfs[0].hash
+          baseContent.size = ipfs[0].size
+          baseContent.slug = tempContent.slug
+          data.transformed.content.push(baseContent)
         })
-      } else if (
-        tempContent.media === 'Image' ||
-        tempContent.media === 'Audio' ||
-        tempContent.media === 'Video' ||
-        tempContent.media === 'File'
-      ) {
-        // TODO: convert text object to markdown
-        let filePromise = addFile(
-          contentPost.data['content.image'].value.main.url
-        )
+      } else if (tempContent.media === 'Image') {
+        let filePromise = addFile(contentPost.data['content.image'].value.main.url)
         contentPromiseArray.push(filePromise)
         filePromise.then(ipfs => {
-          tempContent.ipfs = ipfs
-          data.transformed.content.push(tempContent)
+          let baseContent = {}
+          baseContent.hash = ipfs[0].hash
+          baseContent.size = ipfs[0].size
+          baseContent.slug = tempContent.slug
+          data.transformed.content.push(baseContent)
+        })
+      } else if (tempContent.media === 'Audio') {
+        let filePromise = addFile(contentPost.data['content.audio'].value.file.url)
+        contentPromiseArray.push(filePromise)
+        filePromise.then(ipfs => {
+          let baseContent = {}
+          baseContent.hash = ipfs[0].hash
+          baseContent.size = ipfs[0].size
+          baseContent.slug = tempContent.slug
+          data.transformed.content.push(baseContent)
+        })
+      } else if (tempContent.media === 'Video') {
+        let filePromise = addFile(contentPost.data['content.video'].value.file.url)
+        contentPromiseArray.push(filePromise)
+        filePromise.then(ipfs => {
+          let baseContent = {}
+          baseContent.hash = ipfs[0].hash
+          baseContent.size = ipfs[0].size
+          baseContent.slug = tempContent.slug
+          data.transformed.content.push(baseContent)
+        })
+      } else if (tempContent.media === 'File') {
+        let filePromise = addFile(contentPost.data['content.file'].value.file.url)
+        contentPromiseArray.push(filePromise)
+        filePromise.then(ipfs => {
+          let baseContent = {}
+          baseContent.hash = ipfs[0].hash
+          baseContent.size = ipfs[0].size
+          baseContent.slug = tempContent.slug
+          data.transformed.content.push(baseContent)
         })
       }
     })
@@ -75,10 +102,11 @@ const transformContent = data => {
 const transformWorks = data => {
   return new Promise((resolve, reject) => {
     data.transformed.works = []
+    let workPromiseArray = []
     data.filter(post => post.type === 'work').map(work => {
       let tempWork = {}
       tempWork.slug = work.slug
-      tempWork.type = work.type
+      // tempWork.type = work.type
       tempWork.title = work.data['work.title'].value[0].text
       tempWork.date = work.data['work.publication_time'].value
       tempWork.artists = []
@@ -96,35 +124,42 @@ const transformWorks = data => {
           }
         }
       })
-      data.transformed.works.push(tempWork)
+      let workPromise = addText(JSON.stringify(tempWork))
+      workPromiseArray.push(workPromise)
+      workPromise.then(ipfs => {
+        let baseWork = {}
+        baseWork.hash = ipfs[0].hash
+        baseWork.size = ipfs[0].size
+        baseWork.slug = tempWork.slug
+        data.transformed.works.push(baseWork)
+      })
     })
-    resolve(data)
+    Promise.all(workPromiseArray)
+      .then(() => {
+        resolve(data)
+      })
+      .catch(reject)
   })
 }
 
 const transformExhibitions = data => {
   return new Promise((resolve, reject) => {
     data.transformed.exhibitions = []
+    let exhibitionPromiseArray = []
     data.filter(post => post.type === 'exhibition').map(exhibition => {
       let tempExhibition = {}
       tempExhibition.slug = exhibition.slug
-      tempExhibition.type = exhibition.type
+      // tempExhibition.type = exhibition.type
       tempExhibition.location = {}
       tempExhibition.title = exhibition.data['exhibition.title'].value[0].text
-      tempExhibition.description =
-        exhibition.data['exhibition.description'].value.text
+      tempExhibition.description = exhibition.data['exhibition.description'].value.text
       tempExhibition.start_date = exhibition.data['exhibition.start_date'].value
       tempExhibition.end_date = exhibition.data['exhibition.end_date'].value
-      tempExhibition.festival =
-        exhibition.data['exhibition.festival'].value[0].text
-      tempExhibition.location.venue =
-        exhibition.data['exhibition.venue'].value[0].text
-      tempExhibition.location.city =
-        exhibition.data['exhibition.city'].value[0].text
-      tempExhibition.location.country =
-        exhibition.data['exhibition.country'].value[0].text
-      tempExhibition.location.geopoint =
-        exhibition.data['exhibition.location'].value
+      tempExhibition.festival = exhibition.data['exhibition.festival'].value[0].text
+      tempExhibition.location.venue = exhibition.data['exhibition.venue'].value[0].text
+      tempExhibition.location.city = exhibition.data['exhibition.city'].value[0].text
+      tempExhibition.location.country = exhibition.data['exhibition.country'].value[0].text
+      tempExhibition.location.geopoint = exhibition.data['exhibition.location'].value
       tempExhibition.works = []
       exhibition.data['exhibition.works'].value.map(work => {
         if (work.work && work.work.value) {
@@ -136,9 +171,21 @@ const transformExhibitions = data => {
           }
         }
       })
-      data.transformed.exhibitions.push(tempExhibition)
+      let exhibitionPromise = addText(JSON.stringify(tempExhibition))
+      exhibitionPromiseArray.push(exhibitionPromise)
+      exhibitionPromise.then(ipfs => {
+        let baseExhibition = {}
+        baseExhibition.hash = ipfs[0].hash
+        baseExhibition.size = ipfs[0].size
+        baseExhibition.slug = tempExhibition.slug
+        data.transformed.exhibitions.push(baseExhibition)
+      })
     })
-    resolve(data)
+    Promise.all(exhibitionPromiseArray)
+      .then(() => {
+        resolve(data)
+      })
+      .catch(reject)
   })
 }
 
