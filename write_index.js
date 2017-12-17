@@ -2,11 +2,7 @@ const Web3 = require('web3')
 const Tx = require('ethereumjs-tx')
 
 const web3 = new Web3()
-web3.setProvider(
-  new web3.providers.HttpProvider(
-    'https://rinkeby.infura.io/35d16cN6cJHiZGlnWfZ2'
-  )
-)
+web3.setProvider(new web3.providers.HttpProvider('https://rinkeby.infura.io/35d16cN6cJHiZGlnWfZ2'))
 
 const CONTRACT_ADDRESS = '0x737A4FA0eDBcc8c29d74cd2cebA315314E2C608A'
 
@@ -44,8 +40,7 @@ const abi = [
 const rootContract = new web3.eth.Contract(abi, CONTRACT_ADDRESS)
 
 const addressFrom = '0x25A885aFBACd312042F8cB7Af4e7D6BbDCDA13D6'
-const privKey =
-  '7cba3c2876d2c21a47fdf7e28e444f6c64bd7eefb402b32f00d7269f3ca77ded'
+const privKey = '7cba3c2876d2c21a47fdf7e28e444f6c64bd7eefb402b32f00d7269f3ca77ded'
 
 const addressTo = CONTRACT_ADDRESS
 
@@ -60,7 +55,7 @@ function sendSigned(txData, cb) {
 module.exports = rootHash => {
   return new Promise((resolve, reject) => {
     web3.eth.getTransactionCount(addressFrom).then(txCount => {
-      console.log(rootHash)
+      console.log('Root hash:', rootHash)
       const txData = {
         nonce: web3.utils.toHex(txCount),
         gasLimit: web3.utils.toHex(750000),

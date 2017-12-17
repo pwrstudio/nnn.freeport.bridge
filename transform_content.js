@@ -35,6 +35,7 @@ const transformContent = data => {
       tempContent.title = contentPost.data['content.title'].value[0].text
       tempContent.media = contentPost.data['content.content_type'].value
       tempContent.slug = contentPost.slug
+      tempContent.id = contentPost.id
       if (tempContent.media === 'Text') {
         // TODO: convert text object to markdown
         let textPromise = addText(
@@ -45,8 +46,8 @@ const transformContent = data => {
           tempContent.ipfs = ipfs
           let baseContent = {}
           baseContent.hash = ipfs[0].hash
-          baseContent.size = ipfs[0].size
           baseContent.slug = tempContent.slug
+          baseContent.id = tempContent.id
           data.transformed.content.push(baseContent)
         })
       } else if (tempContent.media === 'Image') {
@@ -55,8 +56,8 @@ const transformContent = data => {
         filePromise.then(ipfs => {
           let baseContent = {}
           baseContent.hash = ipfs[0].hash
-          baseContent.size = ipfs[0].size
           baseContent.slug = tempContent.slug
+          baseContent.id = tempContent.id
           data.transformed.content.push(baseContent)
         })
       } else if (tempContent.media === 'Audio') {
@@ -65,8 +66,8 @@ const transformContent = data => {
         filePromise.then(ipfs => {
           let baseContent = {}
           baseContent.hash = ipfs[0].hash
-          baseContent.size = ipfs[0].size
           baseContent.slug = tempContent.slug
+          baseContent.id = tempContent.id
           data.transformed.content.push(baseContent)
         })
       } else if (tempContent.media === 'Video') {
@@ -75,8 +76,8 @@ const transformContent = data => {
         filePromise.then(ipfs => {
           let baseContent = {}
           baseContent.hash = ipfs[0].hash
-          baseContent.size = ipfs[0].size
           baseContent.slug = tempContent.slug
+          baseContent.id = tempContent.id
           data.transformed.content.push(baseContent)
         })
       } else if (tempContent.media === 'File') {
@@ -85,15 +86,25 @@ const transformContent = data => {
         filePromise.then(ipfs => {
           let baseContent = {}
           baseContent.hash = ipfs[0].hash
-          baseContent.size = ipfs[0].size
           baseContent.slug = tempContent.slug
+          baseContent.id = tempContent.id
           data.transformed.content.push(baseContent)
         })
       }
     })
     Promise.all(contentPromiseArray)
       .then(() => {
-        resolve(data)
+        resolve(
+          data.sort((a, b) => {
+            if (a.slug < b.slug) {
+              return -1
+            }
+            if (a.slug > b.slug) {
+              return 1
+            }
+            return 0
+          })
+        )
       })
       .catch(reject)
   })
@@ -106,7 +117,7 @@ const transformWorks = data => {
     data.filter(post => post.type === 'work').map(work => {
       let tempWork = {}
       tempWork.slug = work.slug
-      // tempWork.type = work.type
+      tempWork.id = work.id
       tempWork.title = work.data['work.title'].value[0].text
       tempWork.date = work.data['work.publication_time'].value
       tempWork.artists = []
@@ -117,7 +128,7 @@ const transformWorks = data => {
       work.data['work.content'].value.map(content => {
         if (content.content_item && content.content_item.value) {
           let matchingContent = data.transformed.content.find(
-            e => e.slug === content.content_item.value.document.slug
+            e => e.id === content.content_item.value.document.id
           )
           if (matchingContent) {
             tempWork.content.push(matchingContent)
@@ -129,14 +140,24 @@ const transformWorks = data => {
       workPromise.then(ipfs => {
         let baseWork = {}
         baseWork.hash = ipfs[0].hash
-        baseWork.size = ipfs[0].size
         baseWork.slug = tempWork.slug
+        baseWork.id = tempWork.id
         data.transformed.works.push(baseWork)
       })
     })
     Promise.all(workPromiseArray)
       .then(() => {
-        resolve(data)
+        resolve(
+          data.sort((a, b) => {
+            if (a.slug < b.slug) {
+              return -1
+            }
+            if (a.slug > b.slug) {
+              return 1
+            }
+            return 0
+          })
+        )
       })
       .catch(reject)
   })
@@ -149,7 +170,6 @@ const transformExhibitions = data => {
     data.filter(post => post.type === 'exhibition').map(exhibition => {
       let tempExhibition = {}
       tempExhibition.slug = exhibition.slug
-      // tempExhibition.type = exhibition.type
       tempExhibition.location = {}
       tempExhibition.title = exhibition.data['exhibition.title'].value[0].text
       tempExhibition.description = exhibition.data['exhibition.description'].value.text
@@ -163,9 +183,7 @@ const transformExhibitions = data => {
       tempExhibition.works = []
       exhibition.data['exhibition.works'].value.map(work => {
         if (work.work && work.work.value) {
-          let matchingWork = data.transformed.works.find(
-            e => e.slug === work.work.value.document.slug
-          )
+          let matchingWork = data.transformed.works.find(e => e.id === work.work.value.document.id)
           if (matchingWork) {
             tempExhibition.works.push(matchingWork)
           }
@@ -176,13 +194,14 @@ const transformExhibitions = data => {
       exhibitionPromise.then(ipfs => {
         let baseExhibition = {}
         baseExhibition.hash = ipfs[0].hash
-        baseExhibition.size = ipfs[0].size
         baseExhibition.slug = tempExhibition.slug
         data.transformed.exhibitions.push(baseExhibition)
       })
     })
     Promise.all(exhibitionPromiseArray)
       .then(() => {
+        data.transformed.works.map(e => delete e.id)
+        data.transformed.content.map(e => delete e.id)
         resolve(data)
       })
       .catch(reject)
