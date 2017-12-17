@@ -26,15 +26,14 @@ const addFile = url => {
   })
 }
 
-const transformContent = data => {
+const transformFiles = data => {
   return new Promise((resolve, reject) => {
-    data.transformed.content = []
+    data.transformed.files = []
     let contentPromiseArray = []
     data.filter(post => post.type === 'content').map(contentPost => {
       let tempContent = {}
       tempContent.title = contentPost.data['content.title'].value[0].text
       tempContent.media = contentPost.data['content.content_type'].value
-      tempContent.slug = contentPost.slug
       tempContent.id = contentPost.id
       if (tempContent.media === 'Text') {
         // TODO: convert text object to markdown
@@ -46,9 +45,10 @@ const transformContent = data => {
           tempContent.ipfs = ipfs
           let baseContent = {}
           baseContent.hash = ipfs[0].hash
-          baseContent.slug = tempContent.slug
+          baseContent.title = tempContent.title
+          baseContent.media = tempContent.media
           baseContent.id = tempContent.id
-          data.transformed.content.push(baseContent)
+          data.transformed.files.push(baseContent)
         })
       } else if (tempContent.media === 'Image') {
         let filePromise = addFile(contentPost.data['content.image'].value.main.url)
@@ -56,9 +56,10 @@ const transformContent = data => {
         filePromise.then(ipfs => {
           let baseContent = {}
           baseContent.hash = ipfs[0].hash
-          baseContent.slug = tempContent.slug
+          baseContent.title = tempContent.title
+          baseContent.media = tempContent.media
           baseContent.id = tempContent.id
-          data.transformed.content.push(baseContent)
+          data.transformed.files.push(baseContent)
         })
       } else if (tempContent.media === 'Audio') {
         let filePromise = addFile(contentPost.data['content.audio'].value.file.url)
@@ -66,9 +67,10 @@ const transformContent = data => {
         filePromise.then(ipfs => {
           let baseContent = {}
           baseContent.hash = ipfs[0].hash
-          baseContent.slug = tempContent.slug
+          baseContent.title = tempContent.title
+          baseContent.media = tempContent.media
           baseContent.id = tempContent.id
-          data.transformed.content.push(baseContent)
+          data.transformed.files.push(baseContent)
         })
       } else if (tempContent.media === 'Video') {
         let filePromise = addFile(contentPost.data['content.video'].value.file.url)
@@ -76,9 +78,10 @@ const transformContent = data => {
         filePromise.then(ipfs => {
           let baseContent = {}
           baseContent.hash = ipfs[0].hash
-          baseContent.slug = tempContent.slug
+          baseContent.title = tempContent.title
+          baseContent.media = tempContent.media
           baseContent.id = tempContent.id
-          data.transformed.content.push(baseContent)
+          data.transformed.files.push(baseContent)
         })
       } else if (tempContent.media === 'File') {
         let filePromise = addFile(contentPost.data['content.file'].value.file.url)
@@ -86,9 +89,10 @@ const transformContent = data => {
         filePromise.then(ipfs => {
           let baseContent = {}
           baseContent.hash = ipfs[0].hash
-          baseContent.slug = tempContent.slug
+          baseContent.title = tempContent.title
+          baseContent.media = tempContent.media
           baseContent.id = tempContent.id
-          data.transformed.content.push(baseContent)
+          data.transformed.files.push(baseContent)
         })
       }
     })
@@ -96,10 +100,46 @@ const transformContent = data => {
       .then(() => {
         resolve(
           data.sort((a, b) => {
-            if (a.slug < b.slug) {
+            if (a.id < b.id) {
               return -1
             }
-            if (a.slug > b.slug) {
+            if (a.id > b.id) {
+              return 1
+            }
+            return 0
+          })
+        )
+      })
+      .catch(reject)
+  })
+}
+
+const transformContent = data => {
+  return new Promise((resolve, reject) => {
+    data.transformed.content = []
+    let contentPromiseArray = []
+    data.transformed.files.map(file => {
+      let tempContent = {}
+      tempContent.id = file.id
+      tempContent.title = file.title
+      tempContent.hash = file.hash
+      let contentPromise = addText(JSON.stringify(tempContent))
+      contentPromiseArray.push(contentPromise)
+      contentPromise.then(ipfs => {
+        let baseContent = {}
+        baseContent.hash = ipfs[0].hash
+        baseContent.id = tempContent.id
+        data.transformed.content.push(baseContent)
+      })
+    })
+    Promise.all(contentPromiseArray)
+      .then(() => {
+        resolve(
+          data.sort((a, b) => {
+            if (a.id < b.id) {
+              return -1
+            }
+            if (a.id > b.id) {
               return 1
             }
             return 0
@@ -116,7 +156,6 @@ const transformWorks = data => {
     let workPromiseArray = []
     data.filter(post => post.type === 'work').map(work => {
       let tempWork = {}
-      tempWork.slug = work.slug
       tempWork.id = work.id
       tempWork.title = work.data['work.title'].value[0].text
       tempWork.date = work.data['work.publication_time'].value
@@ -140,7 +179,6 @@ const transformWorks = data => {
       workPromise.then(ipfs => {
         let baseWork = {}
         baseWork.hash = ipfs[0].hash
-        baseWork.slug = tempWork.slug
         baseWork.id = tempWork.id
         data.transformed.works.push(baseWork)
       })
@@ -149,10 +187,10 @@ const transformWorks = data => {
       .then(() => {
         resolve(
           data.sort((a, b) => {
-            if (a.slug < b.slug) {
+            if (a.id < b.id) {
               return -1
             }
-            if (a.slug > b.slug) {
+            if (a.id > b.id) {
               return 1
             }
             return 0
@@ -194,7 +232,6 @@ const transformExhibitions = data => {
       exhibitionPromise.then(ipfs => {
         let baseExhibition = {}
         baseExhibition.hash = ipfs[0].hash
-        baseExhibition.slug = tempExhibition.slug
         data.transformed.exhibitions.push(baseExhibition)
       })
     })
@@ -202,6 +239,7 @@ const transformExhibitions = data => {
       .then(() => {
         data.transformed.works.map(e => delete e.id)
         data.transformed.content.map(e => delete e.id)
+        delete data.transformed.files
         resolve(data)
       })
       .catch(reject)
@@ -211,7 +249,8 @@ const transformExhibitions = data => {
 module.exports = data => {
   return new Promise((resolve, reject) => {
     data.transformed = {}
-    transformContent(data)
+    transformFiles(data)
+      .then(transformContent)
       .then(transformWorks)
       .then(transformExhibitions)
       .then(data => {
