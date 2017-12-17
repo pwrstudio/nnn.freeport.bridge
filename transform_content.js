@@ -122,6 +122,7 @@ const transformContent = data => {
       let tempContent = {}
       tempContent.id = file.id
       tempContent.title = file.title
+      tempContent.media = file.media
       tempContent.hash = file.hash
       let contentPromise = addText(JSON.stringify(tempContent))
       contentPromiseArray.push(contentPromise)
