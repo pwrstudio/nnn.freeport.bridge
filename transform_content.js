@@ -3,6 +3,8 @@ const ipfs = ipfsAPI({host: 'ipfs.infura.io', port: '5001', protocol: 'https'})
 const PrismicDOM = require('prismic-dom')
 const toMarkdown = require('to-markdown')
 const request = require('request').defaults({encoding: null})
+const colors = require('colors')
+const Spinner = require('cli-spinner').Spinner
 
 const addText = text => {
   return new Promise((resolve, reject) => {
@@ -27,16 +29,26 @@ const addFile = url => {
 }
 
 const transformFiles = data => {
+  // PROGRESS UPDATE
+  console.log('Transforming files...'.yellow)
+  // PROGRESS UPDATE
   return new Promise((resolve, reject) => {
     data.transformed.files = []
     let contentPromiseArray = []
     data.filter(post => post.type === 'content').map(contentPost => {
       let tempContent = {}
-      tempContent.title = contentPost.data['content.title'].value[0].text
-      tempContent.media = contentPost.data['content.content_type'].value
+      if (contentPost.data['content.title']) {
+        tempContent.title = contentPost.data['content.title'].value[0].text
+      }
+      if (contentPost.data['content.content_type']) {
+        tempContent.media = contentPost.data['content.content_type'].value
+      }
       tempContent.id = contentPost.id
       if (tempContent.media === 'Text') {
-        // TODO: convert text object to markdown
+        // PROGRESS UPDATE
+        let textSpinner = new Spinner('%s Text'.cyan)
+        textSpinner.start()
+        // PROGRESS UPDATE
         let textPromise = addText(
           toMarkdown(PrismicDOM.RichText.asHtml(contentPost.data['content.text'].value))
         )
@@ -48,9 +60,14 @@ const transformFiles = data => {
           baseContent.title = tempContent.title
           baseContent.media = tempContent.media
           baseContent.id = tempContent.id
+          textSpinner.stop()
           data.transformed.files.push(baseContent)
         })
       } else if (tempContent.media === 'Image') {
+        // PROGRESS UPDATE
+        let imageSpinner = new Spinner('%s Image'.cyan)
+        imageSpinner.start()
+        // PROGRESS UPDATE
         let filePromise = addFile(contentPost.data['content.image'].value.main.url)
         contentPromiseArray.push(filePromise)
         filePromise.then(ipfs => {
@@ -59,9 +76,14 @@ const transformFiles = data => {
           baseContent.title = tempContent.title
           baseContent.media = tempContent.media
           baseContent.id = tempContent.id
+          imageSpinner.stop()
           data.transformed.files.push(baseContent)
         })
       } else if (tempContent.media === 'Audio') {
+        // PROGRESS UPDATE
+        let audioSpinner = new Spinner('%s Audio'.cyan)
+        audioSpinner.start()
+        // PROGRESS UPDATE
         let filePromise = addFile(contentPost.data['content.audio'].value.file.url)
         contentPromiseArray.push(filePromise)
         filePromise.then(ipfs => {
@@ -70,9 +92,13 @@ const transformFiles = data => {
           baseContent.title = tempContent.title
           baseContent.media = tempContent.media
           baseContent.id = tempContent.id
+          audioSpinner.stop()
           data.transformed.files.push(baseContent)
         })
       } else if (tempContent.media === 'Video') {
+        // PROGRESS UPDATE
+        let videoSpinner = new Spinner('%s Video'.cyan)
+        // PROGRESS UPDATE
         let filePromise = addFile(contentPost.data['content.video'].value.file.url)
         contentPromiseArray.push(filePromise)
         filePromise.then(ipfs => {
@@ -81,9 +107,14 @@ const transformFiles = data => {
           baseContent.title = tempContent.title
           baseContent.media = tempContent.media
           baseContent.id = tempContent.id
+          videoSpinner.stop()
           data.transformed.files.push(baseContent)
         })
       } else if (tempContent.media === 'File') {
+        // PROGRESS UPDATE
+        let fileSpinner = new Spinner('%s File'.cyan)
+        fileSpinner.start()
+        // PROGRESS UPDATE
         let filePromise = addFile(contentPost.data['content.file'].value.file.url)
         contentPromiseArray.push(filePromise)
         filePromise.then(ipfs => {
@@ -92,12 +123,31 @@ const transformFiles = data => {
           baseContent.title = tempContent.title
           baseContent.media = tempContent.media
           baseContent.id = tempContent.id
+          fileSpinner.stop()
+          data.transformed.files.push(baseContent)
+        })
+      } else if (tempContent.media === 'External link') {
+        // PROGRESS UPDATE
+        let linkSpinner = new Spinner('%s Link'.cyan)
+        linkSpinner.start()
+        // PROGRESS UPDATE
+        let linkPromise = addText(contentPost.data['content.external_link'].value.url)
+        contentPromiseArray.push(linkPromise)
+        linkPromise.then(ipfs => {
+          tempContent.ipfs = ipfs
+          let baseContent = {}
+          baseContent.hash = ipfs[0].hash
+          baseContent.title = tempContent.title
+          baseContent.media = tempContent.media
+          baseContent.id = tempContent.id
+          linkSpinner.stop()
           data.transformed.files.push(baseContent)
         })
       }
     })
     Promise.all(contentPromiseArray)
       .then(() => {
+        console.log('\n✓ All files processed'.green)
         resolve(
           data.sort((a, b) => {
             if (a.id < b.id) {
@@ -115,6 +165,10 @@ const transformFiles = data => {
 }
 
 const transformContent = data => {
+  // PROGRESS UPDATE
+  const spinner = new Spinner('%s Transforming content'.yellow)
+  spinner.start()
+  // PROGRESS UPDATE
   return new Promise((resolve, reject) => {
     data.transformed.content = []
     let contentPromiseArray = []
@@ -135,6 +189,8 @@ const transformContent = data => {
     })
     Promise.all(contentPromiseArray)
       .then(() => {
+        console.log('\n✓ All content processed'.green)
+        spinner.stop()
         resolve(
           data.sort((a, b) => {
             if (a.id < b.id) {
@@ -152,29 +208,43 @@ const transformContent = data => {
 }
 
 const transformWorks = data => {
+  // PROGRESS UPDATE
+  const spinner = new Spinner('%s Transforming works'.yellow)
+  spinner.start()
+  // PROGRESS UPDATE
   return new Promise((resolve, reject) => {
     data.transformed.works = []
     let workPromiseArray = []
     data.filter(post => post.type === 'work').map(work => {
       let tempWork = {}
       tempWork.id = work.id
-      tempWork.title = work.data['work.title'].value[0].text
-      tempWork.date = work.data['work.publication_time'].value
+      if (work.data['work.title']) {
+        tempWork.title = work.data['work.title'].value[0].text
+      }
+      if (work.data['work.publication_time']) {
+        tempWork.date = work.data['work.publication_time'].value
+      } else {
+        tempWork.date = 0
+      }
       tempWork.artists = []
-      work.data['work.artists'].value.map(artist => {
-        tempWork.artists.push(artist.artis.value[0].text)
-      })
+      if (work.data['work.artists']) {
+        work.data['work.artists'].value.map(artist => {
+          tempWork.artists.push(artist.artis.value[0].text)
+        })
+      }
       tempWork.content = []
-      work.data['work.content'].value.map(content => {
-        if (content.content_item && content.content_item.value) {
-          let matchingContent = data.transformed.content.find(
-            e => e.id === content.content_item.value.document.id
-          )
-          if (matchingContent) {
-            tempWork.content.push(matchingContent)
+      if (work.data['work.content']) {
+        work.data['work.content'].value.map(content => {
+          if (content.content_item && content.content_item.value) {
+            let matchingContent = data.transformed.content.find(
+              e => e.id === content.content_item.value.document.id
+            )
+            if (matchingContent) {
+              tempWork.content.push(matchingContent)
+            }
           }
-        }
-      })
+        })
+      }
       let workPromise = addText(JSON.stringify(tempWork))
       workPromiseArray.push(workPromise)
       workPromise.then(ipfs => {
@@ -186,6 +256,8 @@ const transformWorks = data => {
     })
     Promise.all(workPromiseArray)
       .then(() => {
+        console.log('\n✓ All works processed'.green)
+        spinner.stop()
         resolve(
           data.sort((a, b) => {
             if (a.id < b.id) {
@@ -203,6 +275,10 @@ const transformWorks = data => {
 }
 
 const transformExhibitions = data => {
+  // PROGRESS UPDATE
+  const spinner = new Spinner('%s Transforming exhibitions'.yellow)
+  spinner.start()
+  // PROGRESS UPDATE
   return new Promise((resolve, reject) => {
     data.transformed.exhibitions = []
     let exhibitionPromiseArray = []
@@ -210,24 +286,46 @@ const transformExhibitions = data => {
       let tempExhibition = {}
       tempExhibition.slug = exhibition.slug
       tempExhibition.location = {}
-      tempExhibition.title = exhibition.data['exhibition.title'].value[0].text
-      tempExhibition.description = exhibition.data['exhibition.description'].value.text
-      tempExhibition.start_date = exhibition.data['exhibition.start_date'].value
-      tempExhibition.end_date = exhibition.data['exhibition.end_date'].value
-      tempExhibition.festival = exhibition.data['exhibition.festival'].value[0].text
-      tempExhibition.location.venue = exhibition.data['exhibition.venue'].value[0].text
-      tempExhibition.location.city = exhibition.data['exhibition.city'].value[0].text
-      tempExhibition.location.country = exhibition.data['exhibition.country'].value[0].text
-      tempExhibition.location.geopoint = exhibition.data['exhibition.location'].value
+      if (exhibition.data['exhibition.title']) {
+        tempExhibition.title = exhibition.data['exhibition.title'].value[0].text
+      }
+      if (exhibition.data['exhibition.description']) {
+        tempExhibition.description = exhibition.data['exhibition.description'].value.text
+      }
+      if (exhibition.data['exhibition.start_date']) {
+        tempExhibition.start_date = exhibition.data['exhibition.start_date'].value
+      }
+      if (exhibition.data['exhibition.end_date']) {
+        tempExhibition.end_date = exhibition.data['exhibition.end_date'].value
+      }
+      if (exhibition.data['exhibition.festival']) {
+        tempExhibition.festival = exhibition.data['exhibition.festival'].value[0].text
+      }
+      if (exhibition.data['exhibition.venue']) {
+        tempExhibition.location.venue = exhibition.data['exhibition.venue'].value[0].text
+      }
+      if (exhibition.data['exhibition.city']) {
+        tempExhibition.location.city = exhibition.data['exhibition.city'].value[0].text
+      }
+      if (exhibition.data['exhibition.country']) {
+        tempExhibition.location.country = exhibition.data['exhibition.country'].value[0].text
+      }
+      if (exhibition.data['exhibition.location']) {
+        tempExhibition.location.geopoint = exhibition.data['exhibition.location'].value
+      }
       tempExhibition.works = []
-      exhibition.data['exhibition.works'].value.map(work => {
-        if (work.work && work.work.value) {
-          let matchingWork = data.transformed.works.find(e => e.id === work.work.value.document.id)
-          if (matchingWork) {
-            tempExhibition.works.push(matchingWork)
+      if (exhibition.data['exhibition.works']) {
+        exhibition.data['exhibition.works'].value.map(work => {
+          if (work.work && work.work.value) {
+            let matchingWork = data.transformed.works.find(
+              e => e.id === work.work.value.document.id
+            )
+            if (matchingWork) {
+              tempExhibition.works.push(matchingWork)
+            }
           }
-        }
-      })
+        })
+      }
       let exhibitionPromise = addText(JSON.stringify(tempExhibition))
       exhibitionPromiseArray.push(exhibitionPromise)
       exhibitionPromise.then(ipfs => {
@@ -238,12 +336,30 @@ const transformExhibitions = data => {
     })
     Promise.all(exhibitionPromiseArray)
       .then(() => {
+        spinner.stop()
+        console.log('\n✓ All exhibitions processed'.green)
         data.transformed.works.map(e => delete e.id)
         data.transformed.content.map(e => delete e.id)
         delete data.transformed.files
         resolve(data)
       })
       .catch(reject)
+  })
+}
+
+const addAbout = data => {
+  // PROGRESS UPDATE
+  const spinner = new Spinner('%s Adding about...'.yellow)
+  spinner.start()
+  // PROGRESS UPDATE
+  return new Promise((resolve, reject) => {
+    data.transformed.about = {}
+    let about = data.find(post => post.type === 'about_page')
+    data.transformed.about.info = about.data['about_text.info_text']
+    data.transformed.about.tech = about.data['about_text.tech']
+    data.transformed.about.credits = about.data['about_text.credits']
+    spinner.stop()
+    resolve(data)
   })
 }
 
@@ -254,6 +370,7 @@ module.exports = data => {
       .then(transformContent)
       .then(transformWorks)
       .then(transformExhibitions)
+      .then(addAbout)
       .then(data => {
         resolve(data.transformed)
       })
