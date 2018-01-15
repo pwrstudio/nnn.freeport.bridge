@@ -6,8 +6,6 @@ module.exports = () => {
   return new Promise((resolve, reject) => {
     // PROGRESS UPDATE
     const spinner = new Spinner('%s Getting content from prismic'.yellow)
-    // console.log('Getting content from prismic ...'.yellow)
-    // spinner.setSpinnerString('|/-\\')
     spinner.start()
     // PROGRESS UPDATE
     Prismic.api('https://nnnfreeport.prismic.io/api')
@@ -18,7 +16,10 @@ module.exports = () => {
         response => {
           // PROGRESS UPDATE
           spinner.stop()
-          console.log('\nReceived content:'.green, String(response.results.length).green.underline)
+          console.log(
+            '\n✓ Received content:'.green,
+            String(response.results.length).green.underline
+          )
           // PROGRESS UPDATE
           resolve(response.results)
         },

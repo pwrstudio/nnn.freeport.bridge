@@ -348,17 +348,22 @@ const transformExhibitions = data => {
 }
 
 const addAbout = data => {
-  // PROGRESS UPDATE
-  const spinner = new Spinner('%s Adding about...'.yellow)
-  spinner.start()
-  // PROGRESS UPDATE
   return new Promise((resolve, reject) => {
+    // PROGRESS UPDATE
+    console.log('– Adding about...'.yellow)
+    // PROGRESS UPDATE
     data.transformed.about = {}
     let about = data.find(post => post.type === 'about_page')
-    data.transformed.about.info = about.data['about_text.info_text']
-    data.transformed.about.tech = about.data['about_text.tech']
-    data.transformed.about.credits = about.data['about_text.credits']
-    spinner.stop()
+    data.transformed.about.info = toMarkdown(
+      PrismicDOM.RichText.asHtml(about.data['about_page.info_text'].value)
+    )
+    data.transformed.about.tech = toMarkdown(
+      PrismicDOM.RichText.asHtml(about.data['about_page.tech'].value)
+    )
+    data.transformed.about.credits = toMarkdown(
+      PrismicDOM.RichText.asHtml(about.data['about_page.credits'].value)
+    )
+    console.log('✓ About page added'.green)
     resolve(data)
   })
 }
@@ -366,11 +371,11 @@ const addAbout = data => {
 module.exports = data => {
   return new Promise((resolve, reject) => {
     data.transformed = {}
-    transformFiles(data)
+    addAbout(data)
+      .then(transformFiles)
       .then(transformContent)
       .then(transformWorks)
       .then(transformExhibitions)
-      .then(addAbout)
       .then(data => {
         resolve(data.transformed)
       })

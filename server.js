@@ -22,7 +22,7 @@ app.use(bodyParser.json())
 const router = express.Router()
 
 router.post('/publish', (req, res) => {
-  console.log('⇨ Webhook call received, starting update...'.red)
+  console.log('⇨ Webhook call received, starting update...'.blue)
   getContent()
     .then(transformContent)
     .then(publishContent)
