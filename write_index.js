@@ -72,7 +72,7 @@ module.exports = rootHash => {
         data: rootContract.methods.set(rootHash).encodeABI()
       }
       // send
-      sendSigned(txData, function(err, result) {
+      sendSigned(txData, (err, result) => {
         if (err) {
           return console.log('error', err)
         }

@@ -30,7 +30,9 @@ router.post('/publish', (req, res) => {
     .then(status => {
       res.send(status).end()
     })
-    .catch(console.log)
+    .catch(err => {
+      console.log('main server promiserejection'.red, err)
+    })
 })
 
 app.use('/', router)

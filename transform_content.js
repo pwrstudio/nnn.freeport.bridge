@@ -5,6 +5,17 @@ const toMarkdown = require('to-markdown')
 const request = require('request').defaults({encoding: null})
 const colors = require('colors')
 const Spinner = require('cli-spinner').Spinner
+var log = require('single-line-log').stdout
+
+const idSort = (a, b) => {
+  if (a.id < b.id) {
+    return -1
+  }
+  if (a.id > b.id) {
+    return 1
+  }
+  return 0
+}
 
 const addText = text => {
   return new Promise((resolve, reject) => {
@@ -17,14 +28,47 @@ const addText = text => {
 
 const addFile = url => {
   return new Promise((resolve, reject) => {
-    request.get(url, function(error, response, body) {
-      if (!error && response.statusCode == 200) {
-        ipfs
-          .add(Buffer.from(body))
-          .then(resolve)
-          .catch(reject)
-      }
-    })
+    if (!url) {
+      console.log('empty')
+      console.log('url', url)
+      url = 'http://via.placeholder.com/350x150'
+    }
+    request
+      .get(url, (error, response, body) => {
+        if (!error && response.statusCode == 200) {
+          ipfs
+            .add(Buffer.from(body))
+            .then(resolve)
+            .catch(reject)
+        } else {
+          console.log('request error:'.red, error)
+        }
+      })
+      .on('error', err => {
+        console.log('on error', err)
+        reject(err)
+      })
+  })
+}
+
+const addAbout = data => {
+  return new Promise((resolve, reject) => {
+    // PROGRESS UPDATE
+    console.log('– Adding about...'.yellow)
+    // PROGRESS UPDATE
+    data.transformed.about = {}
+    let about = data.find(post => post.type === 'about_page')
+    data.transformed.about.info = toMarkdown(
+      PrismicDOM.RichText.asHtml(about.data['about_page.info_text'].value)
+    )
+    data.transformed.about.tech = toMarkdown(
+      PrismicDOM.RichText.asHtml(about.data['about_page.tech'].value)
+    )
+    data.transformed.about.credits = toMarkdown(
+      PrismicDOM.RichText.asHtml(about.data['about_page.credits'].value)
+    )
+    console.log('✓ About page added'.green)
+    resolve(data)
   })
 }
 
@@ -37,21 +81,36 @@ const transformFiles = data => {
     let contentPromiseArray = []
     data.filter(post => post.type === 'content').map(contentPost => {
       let tempContent = {}
-      if (contentPost.data['content.title']) {
+      if (
+        contentPost.data['content.title'] &&
+        contentPost.data['content.title'].value[0] &&
+        contentPost.data['content.title'].value[0].text
+      ) {
         tempContent.title = contentPost.data['content.title'].value[0].text
       }
-      if (contentPost.data['content.content_type']) {
+      if (
+        contentPost.data['content.content_type'] &&
+        contentPost.data['content.content_type'].value
+      ) {
         tempContent.media = contentPost.data['content.content_type'].value
       }
-      tempContent.id = contentPost.id
+      if (contentPost.id) {
+        tempContent.id = contentPost.id
+      }
+      // TEXT
+      // TEXT
+      // TEXT
       if (tempContent.media === 'Text') {
         // PROGRESS UPDATE
-        let textSpinner = new Spinner('%s Text'.cyan)
-        textSpinner.start()
+        log('/ Text:'.cyan, tempContent.title)
         // PROGRESS UPDATE
-        let textPromise = addText(
-          toMarkdown(PrismicDOM.RichText.asHtml(contentPost.data['content.text'].value))
-        )
+        let textContent = ''
+        if (contentPost.data['content.text'] && contentPost.data['content.text'].value) {
+          textContent = toMarkdown(
+            PrismicDOM.RichText.asHtml(contentPost.data['content.text'].value)
+          )
+        }
+        let textPromise = addText(textContent)
         contentPromiseArray.push(textPromise)
         textPromise.then(ipfs => {
           tempContent.ipfs = ipfs
@@ -60,62 +119,117 @@ const transformFiles = data => {
           baseContent.title = tempContent.title
           baseContent.media = tempContent.media
           baseContent.id = tempContent.id
-          textSpinner.stop()
           data.transformed.files.push(baseContent)
         })
+        textPromise.catch(err => {
+          console.log('TEXT: Caught error:'.red, String(err).red)
+        })
+        // IMAGE
+        // IMAGE
+        // IMAGE
+        // IMAGE
       } else if (tempContent.media === 'Image') {
         // PROGRESS UPDATE
-        let imageSpinner = new Spinner('%s Image'.cyan)
-        imageSpinner.start()
+        log('/ Image:'.cyan, tempContent.title)
         // PROGRESS UPDATE
-        let filePromise = addFile(contentPost.data['content.image'].value.main.url)
-        contentPromiseArray.push(filePromise)
-        filePromise.then(ipfs => {
+        // console.log(contentPost.data['content.title'])
+        let imageURL = ''
+        if (
+          contentPost.data['content.image'] &&
+          contentPost.data['content.image'].value &&
+          contentPost.data['content.image'].value.main &&
+          contentPost.data['content.image'].value.main.url
+        ) {
+          imageURL = contentPost.data['content.image'].value.main.url
+        }
+        let imagePromise = addFile(imageURL)
+        contentPromiseArray.push(imagePromise)
+        imagePromise.then(ipfs => {
           let baseContent = {}
           baseContent.hash = ipfs[0].hash
           baseContent.title = tempContent.title
           baseContent.media = tempContent.media
           baseContent.id = tempContent.id
-          imageSpinner.stop()
           data.transformed.files.push(baseContent)
         })
+        imagePromise.catch(err => {
+          console.log('IMAGE: Caught error:'.red, String(err).red)
+        })
+        // AUDIO
+        // AUDIO
+        // AUDIO
       } else if (tempContent.media === 'Audio') {
         // PROGRESS UPDATE
-        let audioSpinner = new Spinner('%s Audio'.cyan)
-        audioSpinner.start()
+        log('/ Audio:'.cyan, tempContent.title)
         // PROGRESS UPDATE
-        let filePromise = addFile(contentPost.data['content.audio'].value.file.url)
-        contentPromiseArray.push(filePromise)
-        filePromise.then(ipfs => {
+        let audioURL = ''
+        if (
+          contentPost.data['content.audio'] &&
+          contentPost.data['content.audio'].value &&
+          contentPost.data['content.audio'].value.file &&
+          contentPost.data['content.audio'].value.file.url
+        ) {
+          audioURL = contentPost.data['content.audio'].value.file.url
+        }
+        let audioPromise = addFile(audioURL)
+        contentPromiseArray.push(audioPromise)
+        audioPromise.then(ipfs => {
           let baseContent = {}
           baseContent.hash = ipfs[0].hash
           baseContent.title = tempContent.title
           baseContent.media = tempContent.media
           baseContent.id = tempContent.id
-          audioSpinner.stop()
           data.transformed.files.push(baseContent)
         })
+        audioPromise.catch(err => {
+          console.log('AUDIO: Caught error:'.red, String(err).red)
+        })
+        // VIDEO
+        // VIDEO
+        // VIDEO
       } else if (tempContent.media === 'Video') {
         // PROGRESS UPDATE
-        let videoSpinner = new Spinner('%s Video'.cyan)
+        log('/ Video:'.cyan, tempContent.title)
         // PROGRESS UPDATE
-        let filePromise = addFile(contentPost.data['content.video'].value.file.url)
-        contentPromiseArray.push(filePromise)
-        filePromise.then(ipfs => {
+        let videoURL = ''
+        if (
+          contentPost.data['content.video'] &&
+          contentPost.data['content.video'].value &&
+          contentPost.data['content.video'].value.file &&
+          contentPost.data['content.video'].value.file.url
+        ) {
+          videoURL = contentPost.data['content.video'].value.file.url
+        }
+        let videoPromise = addFile(videoURL)
+        contentPromiseArray.push(videoPromise)
+        videoPromise.then(ipfs => {
           let baseContent = {}
           baseContent.hash = ipfs[0].hash
           baseContent.title = tempContent.title
           baseContent.media = tempContent.media
           baseContent.id = tempContent.id
-          videoSpinner.stop()
           data.transformed.files.push(baseContent)
         })
+        videoPromise.catch(err => {
+          console.log('VIDEO: Caught error:'.red, String(err).red)
+        })
+        // FILE
+        // FILE
+        // FILE
       } else if (tempContent.media === 'File') {
         // PROGRESS UPDATE
-        let fileSpinner = new Spinner('%s File'.cyan)
-        fileSpinner.start()
+        log('/ File:'.cyan, tempContent.title)
         // PROGRESS UPDATE
-        let filePromise = addFile(contentPost.data['content.file'].value.file.url)
+        let fileURL = ''
+        if (
+          contentPost.data['content.file'] &&
+          contentPost.data['content.file'].value &&
+          contentPost.data['content.file'].value.file &&
+          contentPost.data['content.file'].value.file.url
+        ) {
+          fileURL = contentPost.data['content.file'].value.file.url
+        }
+        let filePromise = addFile(fileURL)
         contentPromiseArray.push(filePromise)
         filePromise.then(ipfs => {
           let baseContent = {}
@@ -123,15 +237,28 @@ const transformFiles = data => {
           baseContent.title = tempContent.title
           baseContent.media = tempContent.media
           baseContent.id = tempContent.id
-          fileSpinner.stop()
           data.transformed.files.push(baseContent)
         })
+        filePromise.catch(err => {
+          console.log('FILE: Caught error:'.red, String(err).red)
+        })
+        // LINK
+        // LINK
+        // LINK
       } else if (tempContent.media === 'External link') {
         // PROGRESS UPDATE
-        let linkSpinner = new Spinner('%s Link'.cyan)
-        linkSpinner.start()
+        log('/ Link:'.cyan, tempContent.title)
         // PROGRESS UPDATE
-        let linkPromise = addText(contentPost.data['content.external_link'].value.url)
+        let linkURL = ''
+        if (
+          contentPost.data['content.external_link'] &&
+          contentPost.data['content.external_link'].value &&
+          contentPost.data['content.external_link'].value.file &&
+          contentPost.data['content.external_link'].value.file.url
+        ) {
+          linkURL = addText(contentPost.data['content.external_link'].value.url)
+        }
+        let linkPromise = addText(linkURL)
         contentPromiseArray.push(linkPromise)
         linkPromise.then(ipfs => {
           tempContent.ipfs = ipfs
@@ -140,27 +267,22 @@ const transformFiles = data => {
           baseContent.title = tempContent.title
           baseContent.media = tempContent.media
           baseContent.id = tempContent.id
-          linkSpinner.stop()
           data.transformed.files.push(baseContent)
+        })
+        linkPromise.catch(err => {
+          console.log('LINK: Caught error:'.red, String(err).red)
         })
       }
     })
     Promise.all(contentPromiseArray)
       .then(() => {
         console.log('\n✓ All files processed'.green)
-        resolve(
-          data.sort((a, b) => {
-            if (a.id < b.id) {
-              return -1
-            }
-            if (a.id > b.id) {
-              return 1
-            }
-            return 0
-          })
-        )
+        resolve(data.sort(idSort))
       })
-      .catch(reject)
+      .catch(err => {
+        console.log('file promise rejection'.red, err)
+        reject(err)
+      })
   })
 }
 
@@ -203,7 +325,10 @@ const transformContent = data => {
           })
         )
       })
-      .catch(reject)
+      .catch(err => {
+        console.log('content promise rejection'.red, err)
+        reject(err)
+      })
   })
 }
 
@@ -220,6 +345,9 @@ const transformWorks = data => {
       tempWork.id = work.id
       if (work.data['work.title']) {
         tempWork.title = work.data['work.title'].value[0].text
+      }
+      if (work.data['work.description']) {
+        tempWork.description = work.data['work.description'].value[0].text
       }
       if (work.data['work.publication_time']) {
         tempWork.date = work.data['work.publication_time'].value
@@ -258,19 +386,12 @@ const transformWorks = data => {
       .then(() => {
         console.log('\n✓ All works processed'.green)
         spinner.stop()
-        resolve(
-          data.sort((a, b) => {
-            if (a.id < b.id) {
-              return -1
-            }
-            if (a.id > b.id) {
-              return 1
-            }
-            return 0
-          })
-        )
+        resolve(data.sort(idSort))
       })
-      .catch(reject)
+      .catch(err => {
+        console.log('work promise rejection'.red, err)
+        reject(err)
+      })
   })
 }
 
@@ -328,11 +449,13 @@ const transformExhibitions = data => {
       }
       let exhibitionPromise = addText(JSON.stringify(tempExhibition))
       exhibitionPromiseArray.push(exhibitionPromise)
-      exhibitionPromise.then(ipfs => {
-        let baseExhibition = {}
-        baseExhibition.hash = ipfs[0].hash
-        data.transformed.exhibitions.push(baseExhibition)
-      })
+      exhibitionPromise
+        .then(ipfs => {
+          let baseExhibition = {}
+          baseExhibition.hash = ipfs[0].hash
+          data.transformed.exhibitions.push(baseExhibition)
+        })
+        .catch(reject)
     })
     Promise.all(exhibitionPromiseArray)
       .then(() => {
@@ -343,28 +466,10 @@ const transformExhibitions = data => {
         delete data.transformed.files
         resolve(data)
       })
-      .catch(reject)
-  })
-}
-
-const addAbout = data => {
-  return new Promise((resolve, reject) => {
-    // PROGRESS UPDATE
-    console.log('– Adding about...'.yellow)
-    // PROGRESS UPDATE
-    data.transformed.about = {}
-    let about = data.find(post => post.type === 'about_page')
-    data.transformed.about.info = toMarkdown(
-      PrismicDOM.RichText.asHtml(about.data['about_page.info_text'].value)
-    )
-    data.transformed.about.tech = toMarkdown(
-      PrismicDOM.RichText.asHtml(about.data['about_page.tech'].value)
-    )
-    data.transformed.about.credits = toMarkdown(
-      PrismicDOM.RichText.asHtml(about.data['about_page.credits'].value)
-    )
-    console.log('✓ About page added'.green)
-    resolve(data)
+      .catch(err => {
+        console.log('exhibition promise rejection'.red, err)
+        reject(err)
+      })
   })
 }
 
@@ -379,6 +484,9 @@ module.exports = data => {
       .then(data => {
         resolve(data.transformed)
       })
-      .catch(console.log)
+      .catch(err => {
+        console.log('main transform promise rejection'.red, err)
+        reject(err)
+      })
   })
 }
