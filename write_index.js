@@ -1,7 +1,6 @@
 const Web3 = require('web3')
 const Tx = require('ethereumjs-tx')
 const colors = require('colors')
-const Spinner = require('cli-spinner').Spinner
 
 const web3 = new Web3()
 web3.setProvider(new web3.providers.HttpProvider('https://rinkeby.infura.io/35d16cN6cJHiZGlnWfZ2'))
@@ -55,13 +54,12 @@ function sendSigned(txData, cb) {
 }
 
 module.exports = rootHash => {
-  // PROGRESS UPDATE
-  const spinner = new Spinner('%s Writing to Blockchain...'.yellow)
-  spinner.start()
-  // PROGRESS UPDATE
   return new Promise((resolve, reject) => {
+    console.log('– Writing to Blockchain...'.yellow)
+
     web3.eth.getTransactionCount(addressFrom).then(txCount => {
-      console.log('\n✓ Root hash:'.green, String(rootHash).green)
+      console.log('✓ Root hash:'.green, String(rootHash).green)
+
       const txData = {
         nonce: web3.utils.toHex(txCount),
         gasLimit: web3.utils.toHex(750000),
@@ -71,14 +69,15 @@ module.exports = rootHash => {
         value: web3.utils.toHex(web3.utils.toWei('0', 'ether')),
         data: rootContract.methods.set(rootHash).encodeABI()
       }
-      // send
+
       sendSigned(txData, (err, result) => {
         if (err) {
-          return console.log('error', err)
+          console.log('error', err)
+          reject('ERROR')
         }
-        spinner.stop()
-        console.log('\n✓ Transaction sent:'.green, String(result).green)
-        resolve('200')
+
+        console.log('✓ Transaction sent:'.green, String(result).green)
+        resolve('OK')
       })
     })
   })
