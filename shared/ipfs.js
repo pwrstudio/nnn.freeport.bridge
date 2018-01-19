@@ -23,28 +23,38 @@ module.exports = {
       request
         .get(url, (error, response, body) => {
           if (!error && response.statusCode == 200) {
-            ipfs.add(
-              Buffer.from(body),
-              {
-                progress: data => console.log(String(url).yellow, data, '/', body.length)
-              },
-              (err, data) => {
-                console.log(err, data)
-                if (!err && data[0] && data[0].hash) {
-                  console.log(String(url).yellow, ' =>'.cyan, String(data[0].hash).green)
-                  console.count('finished'.green)
-
-                  resolve(data)
+            ipfs.add(Buffer.from(body), {'only-hash': true}, (err, check) => {
+              ipfs.cat(check[0].hash, (err, fileCheck) => {
+                if (fileCheck) {
+                  console.log(check[0].hash, 'already added'.green)
+                  console.count('finished'.blue)
+                  resolve(check)
                 } else {
-                  console.log('NO HASH'.red)
-                  console.log(data)
-                  console.log(err)
-                  console.log(String(url).red)
-                  console.log(Buffer.from(body).length)
-                  resolve([{hash: '0x'}])
+                  console.log(check[0].hash, 'not added. adding...'.cyan)
+                  ipfs.add(
+                    Buffer.from(body),
+                    {
+                      progress: data => console.log(String(url).yellow, data, '/', body.length)
+                    },
+                    (err, data) => {
+                      console.log(err, data)
+                      if (!err && data[0] && data[0].hash) {
+                        console.log(String(url).yellow, ' =>'.cyan, String(data[0].hash).green)
+                        console.count('finished'.green)
+                        resolve(data)
+                      } else {
+                        console.log('NO HASH'.red)
+                        console.log(data)
+                        console.log(err)
+                        console.log(String(url).red)
+                        console.log(Buffer.from(body).length)
+                        resolve([{hash: '0x'}])
+                      }
+                    }
+                  )
                 }
-              }
-            )
+              })
+            })
           } else {
             console.log('request error:'.red, error)
 
