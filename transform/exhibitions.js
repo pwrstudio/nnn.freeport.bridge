@@ -1,5 +1,7 @@
 const colors = require('colors')
 const ipfs = require('../shared/ipfs.js')
+const PrismicDOM = require('prismic-dom')
+const helpers = require('../shared/helpers.js')
 
 module.exports = data => {
   return new Promise((resolve, reject) => {
@@ -14,58 +16,59 @@ module.exports = data => {
       tempExhibition.location = {}
 
       // TITLE
-      if (exhibition.data['exhibition.title']) {
-        tempExhibition.title = exhibition.data['exhibition.title'].value[0].text
+      if (exhibition.rawJSON.title) {
+        tempExhibition.title = PrismicDOM.RichText.asText(exhibition.rawJSON.title)
       }
 
       // DESCRIPTION
-      if (exhibition.data['exhibition.description']) {
-        tempExhibition.description = exhibition.data['exhibition.description'].value.text
+      if (exhibition.rawJSON.description) {
+        tempExhibition.description = PrismicDOM.RichText.asHtml(
+          exhibition.rawJSON.description,
+          helpers.linkResolver
+        )
       }
 
       // START DATE
-      if (exhibition.data['exhibition.start_date']) {
-        tempExhibition.start_date = exhibition.data['exhibition.start_date'].value
+      if (exhibition.rawJSON.start_date) {
+        tempExhibition.start_date = exhibition.rawJSON.start_date
       }
 
       // END DATE
-      if (exhibition.data['exhibition.end_date']) {
-        tempExhibition.end_date = exhibition.data['exhibition.end_date'].value
+      if (exhibition.rawJSON.end_date) {
+        tempExhibition.end_date = exhibition.rawJSON.end_date
       }
 
       // FESTIVAL
-      if (exhibition.data['exhibition.festival']) {
-        tempExhibition.festival = exhibition.data['exhibition.festival'].value[0].text
+      if (exhibition.rawJSON.festival) {
+        tempExhibition.festival = PrismicDOM.RichText.asText(exhibition.rawJSON.festival)
       }
 
       // VENUE
-      if (exhibition.data['exhibition.venue']) {
-        tempExhibition.location.venue = exhibition.data['exhibition.venue'].value[0].text
+      if (exhibition.rawJSON.venue) {
+        tempExhibition.location.venue = PrismicDOM.RichText.asText(exhibition.rawJSON.venue)
       }
 
       // CITY
-      if (exhibition.data['exhibition.city']) {
-        tempExhibition.location.city = exhibition.data['exhibition.city'].value[0].text
+      if (exhibition.rawJSON.city) {
+        tempExhibition.location.city = PrismicDOM.RichText.asText(exhibition.rawJSON.city)
       }
 
       // COUNTRY
-      if (exhibition.data['exhibition.country']) {
-        tempExhibition.location.country = exhibition.data['exhibition.country'].value[0].text
+      if (exhibition.rawJSON.country) {
+        tempExhibition.location.country = PrismicDOM.RichText.asText(exhibition.rawJSON.country)
       }
 
       // GEOPOINTS
-      if (exhibition.data['exhibition.location']) {
-        tempExhibition.location.geopoint = exhibition.data['exhibition.location'].value
+      if (exhibition.rawJSON.location) {
+        tempExhibition.location.geopoint = exhibition.rawJSON.location
       }
 
       // WORKS
       tempExhibition.works = []
-      if (exhibition.data['exhibition.works']) {
-        exhibition.data['exhibition.works'].value.map(work => {
-          if (work.work && work.work.value) {
-            let matchingWork = data.transformed.works.find(
-              e => e.id === work.work.value.document.id
-            )
+      if (exhibition.rawJSON.works) {
+        exhibition.rawJSON.works.map(work => {
+          if (work.work) {
+            let matchingWork = data.transformed.works.find(e => e.id === work.work.id)
             if (matchingWork) {
               tempExhibition.works.push(matchingWork)
             }

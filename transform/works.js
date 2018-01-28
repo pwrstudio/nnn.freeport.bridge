@@ -1,5 +1,6 @@
 const colors = require('colors')
 const ipfs = require('../shared/ipfs.js')
+const PrismicDOM = require('prismic-dom')
 const helpers = require('../shared/helpers.js')
 
 module.exports = data => {
@@ -14,42 +15,46 @@ module.exports = data => {
       let tempWork = {}
       tempWork.id = work.id
 
+      // console.log(JSON.stringify(work, null, 4))
+
       // TITLE
       tempWork.title = ''
-      if (work.data['work.title']) {
-        tempWork.title = work.data['work.title'].value[0].text
+      if (work.rawJSON.title) {
+        tempWork.title = PrismicDOM.RichText.asText(work.rawJSON.title)
       }
 
       // DESCRIPTION
       tempWork.description = ''
-      if (work.data['work.description']) {
-        tempWork.description = work.data['work.description'].value[0].text
+      if (work.rawJSON.description) {
+        tempWork.description = PrismicDOM.RichText.asHtml(
+          work.rawJSON.description,
+          helpers.linkResolver
+        )
       }
 
       // PUBLISHING TIME
       tempWork.date = 0
-      if (work.data['work.publication_time']) {
-        tempWork.date = work.data['work.publication_time'].value
+      if (work.rawJSON.publication_time) {
+        tempWork.date = work.rawJSON.publication_time
       }
 
       // ARTISTS
       tempWork.artists = []
-      console.log(work.data['work.artists'])
-      if (work.data['work.artists'] && work.data['work.artists'].value) {
-        work.data['work.artists'].value.map(artist => {
-          if (artist && artist.artis && artist.artis.value && artist.artis.value[0]) {
-            tempWork.artists.push(artist.artis.value[0].text)
+      if (work.rawJSON.artists) {
+        work.rawJSON.artists.map(artist => {
+          if (artist.artis) {
+            tempWork.artists.push(PrismicDOM.RichText.asText(artist.artis))
           }
         })
       }
 
       // CONTENT
       tempWork.content = []
-      if (work.data['work.content'] && work.data['work.content'].value) {
-        work.data['work.content'].value.map(content => {
-          if (content.content_item && content.content_item.value) {
+      if (work.rawJSON.content) {
+        work.rawJSON.content.map(content => {
+          if (content.content_item) {
             let matchingContent = data.transformed.content.find(
-              e => e.id === content.content_item.value.document.id
+              e => e.id === content.content_item.id
             )
             if (matchingContent) {
               tempWork.content.push(matchingContent)

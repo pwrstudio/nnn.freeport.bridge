@@ -1,6 +1,6 @@
 const PrismicDOM = require('prismic-dom')
-const toMarkdown = require('to-markdown')
 const colors = require('colors')
+const helpers = require('../shared/helpers.js')
 
 module.exports = data => {
   return new Promise((resolve, reject) => {
@@ -9,22 +9,32 @@ module.exports = data => {
       about: {}
     }
 
+    // console.log(JSON.stringify(data, null, 4))
+
     let about = data.find(post => post.type === 'about_page')
 
     // INFO
-    data.transformed.about.info = toMarkdown(
-      PrismicDOM.RichText.asHtml(about.data['about_page.info_text'].value)
+    data.transformed.about.info = PrismicDOM.RichText.asHtml(
+      about.rawJSON.info_text,
+      helpers.linkResolver
     )
+
+    console.log(data.transformed.about.info)
 
     // TECH
-    data.transformed.about.tech = toMarkdown(
-      PrismicDOM.RichText.asHtml(about.data['about_page.tech'].value)
+    data.transformed.about.tech = PrismicDOM.RichText.asHtml(
+      about.rawJSON.tech,
+      helpers.linkResolver
     )
 
+    console.log(data.transformed.about.tech)
+
     // CREDITS
-    data.transformed.about.credits = toMarkdown(
-      PrismicDOM.RichText.asHtml(about.data['about_page.credits'].value)
+    data.transformed.about.credits = PrismicDOM.RichText.asHtml(
+      about.rawJSON.credits,
+      helpers.linkResolver
     )
+    console.log(data.transformed.about.credits)
 
     console.log('✓ About page added'.green)
 

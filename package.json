@@ -23,6 +23,7 @@
     "express": "^4.16.2",
     "ipfs-api": "^17.5.0",
     "is-ipfs": "^0.3.2",
+    "oembed-parser": "^1.0.8",
     "prismic-dom": "^2.0.6",
     "prismic.io": "^3.6.1",
     "raven": "^2.4.0",

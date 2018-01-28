@@ -1,6 +1,6 @@
 const PrismicDOM = require('prismic-dom')
-const toMarkdown = require('to-markdown')
 const colors = require('colors')
+const {extract} = require('oembed-parser')
 const ipfs = require('../shared/ipfs.js')
 const helpers = require('../shared/helpers.js')
 
@@ -13,34 +13,18 @@ module.exports = data => {
     let contentPromiseArray = []
     data.filter(post => post.type === 'content').map(contentPost => {
       let tempContent = {}
-      if (
-        contentPost.data['content.title'] &&
-        contentPost.data['content.title'].value[0] &&
-        contentPost.data['content.title'].value[0].text
-      ) {
-        tempContent.title = contentPost.data['content.title'].value[0].text
+      if (contentPost.rawJSON.title) {
+        tempContent.title = PrismicDOM.RichText.asText(contentPost.rawJSON.title)
       }
-      if (
-        contentPost.data['content.content_type'] &&
-        contentPost.data['content.content_type'].value
-      ) {
-        tempContent.media = contentPost.data['content.content_type'].value
+      if (contentPost.rawJSON.content_type) {
+        tempContent.media = contentPost.rawJSON.content_type
       }
 
-      // console.log(contentPost.data['content.hierarchy'])
-
-      if (contentPost.data['content.hierarchy']) {
-        // console.log('HIERARCHY'.green)
-        // console.log('HIERARCHY'.green)
-        // console.log('HIERARCHY'.green)
-        // console.log('HIERARCHY'.green)
-        // console.log(contentPost.data['content.hierarchy'].value)
-        tempContent.hierarchy = contentPost.data['content.hierarchy'].value
+      if (contentPost.rawJSON.hierarchy) {
+        tempContent.hierarchy = contentPost.rawJSON.hierarchy
       } else {
         tempContent.hierarchy = 'Documentation'
       }
-
-      // console.log(tempContent.hierarchy)
 
       if (contentPost.id) {
         tempContent.id = contentPost.id
@@ -54,10 +38,8 @@ module.exports = data => {
 
         let textContent = ''
 
-        if (contentPost.data['content.text'] && contentPost.data['content.text'].value) {
-          textContent = toMarkdown(
-            PrismicDOM.RichText.asHtml(contentPost.data['content.text'].value)
-          )
+        if (contentPost.rawJSON.text) {
+          textContent = PrismicDOM.RichText.asHtml(contentPost.rawJSON.text, helpers.linkResolver)
         }
         let textPromise = ipfs.addText(textContent)
         contentPromiseArray.push(textPromise)
@@ -82,13 +64,8 @@ module.exports = data => {
         console.log('/ Image:'.cyan, tempContent.title)
 
         let imageURL = ''
-        if (
-          contentPost.data['content.image'] &&
-          contentPost.data['content.image'].value &&
-          contentPost.data['content.image'].value.main &&
-          contentPost.data['content.image'].value.main.url
-        ) {
-          imageURL = contentPost.data['content.image'].value.main.url
+        if (contentPost.rawJSON.image) {
+          imageURL = contentPost.rawJSON.image.url
         }
         let imagePromise = ipfs.addFile(imageURL)
         contentPromiseArray.push(imagePromise)
@@ -100,9 +77,10 @@ module.exports = data => {
           baseContent.media = tempContent.media
           baseContent.hierarchy = tempContent.hierarchy
           baseContent.id = tempContent.id
-          if (contentPost.data['content.caption']) {
+          if (contentPost.rawJSON.caption) {
             baseContent.caption = PrismicDOM.RichText.asHtml(
-              contentPost.data['content.caption'].value
+              contentPost.rawJSON.caption,
+              helpers.LinkResolver
             )
           }
           data.transformed.files.push(baseContent)
@@ -118,28 +96,18 @@ module.exports = data => {
 
         let audioURL = ''
         // Add audio file
-        if (
-          contentPost.data['content.audio'] &&
-          contentPost.data['content.audio'].value &&
-          contentPost.data['content.audio'].value.file &&
-          contentPost.data['content.audio'].value.file.url
-        ) {
-          audioURL = contentPost.data['content.audio'].value.file.url
+        if (contentPost.rawJSON.audio && contentPost.rawJSON.audio.url) {
+          audioURL = contentPost.rawJSON.audio.url
         }
         let audioPromise = ipfs.addFile(audioURL)
         contentPromiseArray.push(audioPromise)
+
         // Add audio poster image
-        let posterURL = ''
-        if (
-          contentPost.data['content.audio_poster_image'] &&
-          contentPost.data['content.audio_poster_image'].value &&
-          contentPost.data['content.audio_poster_image'].value.main &&
-          contentPost.data['content.audio_poster_image'].value.main.url
-        ) {
-          posterURL = contentPost.data['content.audio_poster_image'].value.main.url
+        if (contentPost.rawJSON.audio_poster_image && contentPost.rawJSON.audio_poster_image.url) {
+          let posterURL = contentPost.rawJSON.audio_poster_image.url
+          var posterPromise = ipfs.addFile(posterURL)
+          contentPromiseArray.push(posterPromise)
         }
-        let posterPromise = ipfs.addFile(posterURL)
-        contentPromiseArray.push(posterPromise)
 
         Promise.all([audioPromise, posterPromise]).then(ipfs => {
           let baseContent = {}
@@ -167,13 +135,8 @@ module.exports = data => {
         console.log('/ Video:'.cyan, tempContent.title)
 
         let videoURL = ''
-        if (
-          contentPost.data['content.video'] &&
-          contentPost.data['content.video'].value &&
-          contentPost.data['content.video'].value.file &&
-          contentPost.data['content.video'].value.file.url
-        ) {
-          videoURL = contentPost.data['content.video'].value.file.url
+        if (contentPost.rawJSON.video && contentPost.rawJSON.video.url) {
+          videoURL = contentPost.rawJSON.video.url
         }
         let videoPromise = ipfs.addFile(videoURL)
         contentPromiseArray.push(videoPromise)
@@ -197,28 +160,18 @@ module.exports = data => {
         console.log('/ File:'.cyan, tempContent.title)
 
         let fileURL = ''
-        if (
-          contentPost.data['content.file'] &&
-          contentPost.data['content.file'].value &&
-          contentPost.data['content.file'].value.file &&
-          contentPost.data['content.file'].value.file.url
-        ) {
-          fileURL = contentPost.data['content.file'].value.file.url
+        if (contentPost.rawJSON.file && contentPost.rawJSON.file.url) {
+          fileURL = contentPost.rawJSON.file.url
         }
         let filePromise = ipfs.addFile(fileURL)
         contentPromiseArray.push(filePromise)
+
         // Add file poster image
-        let posterURL = ''
-        if (
-          contentPost.data['content.file_poster_image'] &&
-          contentPost.data['content.file_poster_image'].value &&
-          contentPost.data['content.file_poster_image'].value.main &&
-          contentPost.data['content.file_poster_image'].value.main.url
-        ) {
-          posterURL = contentPost.data['content.file_poster_image'].value.main.url
+        if (contentPost.rawJSON.video_poster_image && contentPost.rawJSON.video_poster_image.url) {
+          let posterURL = contentPost.rawJSON.video_poster_image.url
+          var posterPromise = ipfs.addFile(posterURL)
+          contentPromiseArray.push(posterPromise)
         }
-        let posterPromise = ipfs.addFile(posterURL)
-        contentPromiseArray.push(posterPromise)
 
         Promise.all([filePromise, posterPromise]).then(ipfs => {
           let baseContent = {}
@@ -245,29 +198,37 @@ module.exports = data => {
       } else if (tempContent.media === 'External link') {
         console.log('/ Link:'.cyan, tempContent.title)
 
+        // Add link
         let linkURL = ''
-        if (
-          contentPost.data['content.external_link'] &&
-          contentPost.data['content.external_link'].value &&
-          contentPost.data['content.external_link'].value.url
-        ) {
-          linkURL = contentPost.data['content.external_link'].value.url
+        if (contentPost.rawJSON.external_link && contentPost.rawJSON.external_link.url) {
+          linkURL = contentPost.rawJSON.external_link.url
         }
+
+        // Get oembed info
+        // if (linkURL.length > 0) {
+        //   extract(linkURL).then(data => {
+        //     var linkPromise = ipfs.addText({
+        //       url: linkURL,
+        //       oembed: data
+        //     })
+        //     contentPromiseArray.push(linkPromise)
+        //   })
+        // } else {
+        //   var linkPromise = ipfs.addText({
+        //     url: linkURL
+        //   })
+        //   contentPromiseArray.push(linkPromise)
+        // }
+
         var linkPromise = ipfs.addText(linkURL)
         contentPromiseArray.push(linkPromise)
 
         // Add link poster image
-        let posterURL = ''
-        if (
-          contentPost.data['content.link_poster_image'] &&
-          contentPost.data['content.link_poster_image'].value &&
-          contentPost.data['content.link_poster_image'].value.main &&
-          contentPost.data['content.link_poster_image'].value.main.url
-        ) {
-          posterURL = contentPost.data['content.link_poster_image'].value.main.url
+        if (contentPost.rawJSON.link_poster_image && contentPost.rawJSON.link_poster_image.url) {
+          let posterURL = contentPost.rawJSON.link_poster_image.url
+          var posterPromise = ipfs.addFile(posterURL)
+          contentPromiseArray.push(posterPromise)
         }
-        let posterPromise = ipfs.addFile(posterURL)
-        contentPromiseArray.push(posterPromise)
 
         Promise.all([linkPromise, posterPromise]).then(ipfs => {
           let baseContent = {}

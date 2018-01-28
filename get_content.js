@@ -5,7 +5,7 @@ module.exports = () => {
   return new Promise((resolve, reject) => {
     console.log('– Getting content from prismic'.yellow)
 
-    Prismic.api('https://nnnfreeport.prismic.io/api')
+    Prismic.api('https://nnnfreeport.prismic.io/api/v2')
       .then(api => {
         return api.query('', {pageSize: 1000})
       })
