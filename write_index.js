@@ -1,6 +1,7 @@
 const Web3 = require('web3')
 const Tx = require('ethereumjs-tx')
 const colors = require('colors')
+const Raven = require('raven')
 
 const web3 = new Web3()
 web3.setProvider(new web3.providers.HttpProvider('https://rinkeby.infura.io/35d16cN6cJHiZGlnWfZ2'))
@@ -77,6 +78,9 @@ module.exports = rootHash => {
         }
 
         console.log('✓ Transaction sent:'.green, String(result).green)
+        Raven.captureMessage('✓ NNN container updated. Root hash: ' + rootHash, {
+          level: 'info'
+        })
         resolve('OK')
       })
     })
