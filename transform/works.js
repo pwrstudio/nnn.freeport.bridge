@@ -9,33 +9,43 @@ module.exports = data => {
     data.transformed.works = []
     let workPromiseArray = []
 
+    // MAP OVER ALL WORKS
     data.filter(post => post.type === 'work').map(work => {
       let tempWork = {}
       tempWork.id = work.id
 
+      // TITLE
+      tempWork.title = ''
       if (work.data['work.title']) {
         tempWork.title = work.data['work.title'].value[0].text
       }
 
+      // DESCRIPTION
+      tempWork.description = ''
       if (work.data['work.description']) {
         tempWork.description = work.data['work.description'].value[0].text
       }
 
+      // PUBLISHING TIME
+      tempWork.date = 0
       if (work.data['work.publication_time']) {
         tempWork.date = work.data['work.publication_time'].value
-      } else {
-        tempWork.date = 0
       }
 
+      // ARTISTS
       tempWork.artists = []
-      if (work.data['work.artists']) {
+      console.log(work.data['work.artists'])
+      if (work.data['work.artists'] && work.data['work.artists'].value) {
         work.data['work.artists'].value.map(artist => {
-          tempWork.artists.push(artist.artis.value[0].text)
+          if (artist && artist.artis && artist.artis.value && artist.artis.value[0]) {
+            tempWork.artists.push(artist.artis.value[0].text)
+          }
         })
       }
 
+      // CONTENT
       tempWork.content = []
-      if (work.data['work.content']) {
+      if (work.data['work.content'] && work.data['work.content'].value) {
         work.data['work.content'].value.map(content => {
           if (content.content_item && content.content_item.value) {
             let matchingContent = data.transformed.content.find(
@@ -48,6 +58,7 @@ module.exports = data => {
         })
       }
 
+      // ADD JSON TO IPFS
       let workPromise = ipfs.addText(JSON.stringify(tempWork))
 
       workPromiseArray.push(workPromise)

@@ -26,9 +26,26 @@ module.exports = data => {
       ) {
         tempContent.media = contentPost.data['content.content_type'].value
       }
+
+      // console.log(contentPost.data['content.hierarchy'])
+
+      if (contentPost.data['content.hierarchy']) {
+        // console.log('HIERARCHY'.green)
+        // console.log('HIERARCHY'.green)
+        // console.log('HIERARCHY'.green)
+        // console.log('HIERARCHY'.green)
+        // console.log(contentPost.data['content.hierarchy'].value)
+        tempContent.hierarchy = contentPost.data['content.hierarchy'].value
+      } else {
+        tempContent.hierarchy = 'Documentation'
+      }
+
+      // console.log(tempContent.hierarchy)
+
       if (contentPost.id) {
         tempContent.id = contentPost.id
       }
+
       // TEXT
       // TEXT
       // TEXT
@@ -50,6 +67,7 @@ module.exports = data => {
           baseContent.hash = ipfs[0].hash
           baseContent.title = tempContent.title
           baseContent.media = tempContent.media
+          baseContent.hierarchy = tempContent.hierarchy
           baseContent.id = tempContent.id
           data.transformed.files.push(baseContent)
         })
@@ -77,9 +95,16 @@ module.exports = data => {
         imagePromise.then(ipfs => {
           let baseContent = {}
           baseContent.hash = ipfs[0].hash
+          baseContent.size = ipfs[0].size
           baseContent.title = tempContent.title
           baseContent.media = tempContent.media
+          baseContent.hierarchy = tempContent.hierarchy
           baseContent.id = tempContent.id
+          if (contentPost.data['content.caption']) {
+            baseContent.caption = PrismicDOM.RichText.asHtml(
+              contentPost.data['content.caption'].value
+            )
+          }
           data.transformed.files.push(baseContent)
         })
         imagePromise.catch(err => {
@@ -92,6 +117,7 @@ module.exports = data => {
         console.log('/ Audio:'.cyan, tempContent.title)
 
         let audioURL = ''
+        // Add audio file
         if (
           contentPost.data['content.audio'] &&
           contentPost.data['content.audio'].value &&
@@ -102,11 +128,32 @@ module.exports = data => {
         }
         let audioPromise = ipfs.addFile(audioURL)
         contentPromiseArray.push(audioPromise)
-        audioPromise.then(ipfs => {
+        // Add audio poster image
+        let posterURL = ''
+        if (
+          contentPost.data['content.audio_poster_image'] &&
+          contentPost.data['content.audio_poster_image'].value &&
+          contentPost.data['content.audio_poster_image'].value.main &&
+          contentPost.data['content.audio_poster_image'].value.main.url
+        ) {
+          posterURL = contentPost.data['content.audio_poster_image'].value.main.url
+        }
+        let posterPromise = ipfs.addFile(posterURL)
+        contentPromiseArray.push(posterPromise)
+
+        Promise.all([audioPromise, posterPromise]).then(ipfs => {
           let baseContent = {}
-          baseContent.hash = ipfs[0].hash
+          if (ipfs[0] && ipfs[0][0]) {
+            baseContent.hash = ipfs[0][0].hash
+            baseContent.size = ipfs[0][0].size
+          }
+          // Write poster image hash
+          if (ipfs[1] && ipfs[1][0]) {
+            baseContent.poster = ipfs[1][0].hash
+          }
           baseContent.title = tempContent.title
           baseContent.media = tempContent.media
+          baseContent.hierarchy = tempContent.hierarchy
           baseContent.id = tempContent.id
           data.transformed.files.push(baseContent)
         })
@@ -133,8 +180,10 @@ module.exports = data => {
         videoPromise.then(ipfs => {
           let baseContent = {}
           baseContent.hash = ipfs[0].hash
+          baseContent.size = ipfs[0].size
           baseContent.title = tempContent.title
           baseContent.media = tempContent.media
+          baseContent.hierarchy = tempContent.hierarchy
           baseContent.id = tempContent.id
           data.transformed.files.push(baseContent)
         })
@@ -158,11 +207,32 @@ module.exports = data => {
         }
         let filePromise = ipfs.addFile(fileURL)
         contentPromiseArray.push(filePromise)
-        filePromise.then(ipfs => {
+        // Add file poster image
+        let posterURL = ''
+        if (
+          contentPost.data['content.file_poster_image'] &&
+          contentPost.data['content.file_poster_image'].value &&
+          contentPost.data['content.file_poster_image'].value.main &&
+          contentPost.data['content.file_poster_image'].value.main.url
+        ) {
+          posterURL = contentPost.data['content.file_poster_image'].value.main.url
+        }
+        let posterPromise = ipfs.addFile(posterURL)
+        contentPromiseArray.push(posterPromise)
+
+        Promise.all([filePromise, posterPromise]).then(ipfs => {
           let baseContent = {}
-          baseContent.hash = ipfs[0].hash
+          if (ipfs[0] && ipfs[0][0]) {
+            baseContent.hash = ipfs[0][0].hash
+            baseContent.size = ipfs[0][0].size
+          }
+          // Write poster image hash
+          if (ipfs[1] && ipfs[1][0]) {
+            baseContent.poster = ipfs[1][0].hash
+          }
           baseContent.title = tempContent.title
           baseContent.media = tempContent.media
+          baseContent.hierarchy = tempContent.hierarchy
           baseContent.id = tempContent.id
           data.transformed.files.push(baseContent)
         })
@@ -179,19 +249,39 @@ module.exports = data => {
         if (
           contentPost.data['content.external_link'] &&
           contentPost.data['content.external_link'].value &&
-          contentPost.data['content.external_link'].value.file &&
-          contentPost.data['content.external_link'].value.file.url
+          contentPost.data['content.external_link'].value.url
         ) {
-          linkURL = ipfs.addText(contentPost.data['content.external_link'].value.url)
+          linkURL = contentPost.data['content.external_link'].value.url
         }
-        let linkPromise = ipfs.addText(linkURL)
+        var linkPromise = ipfs.addText(linkURL)
         contentPromiseArray.push(linkPromise)
-        linkPromise.then(ipfs => {
-          tempContent.ipfs = ipfs
+
+        // Add link poster image
+        let posterURL = ''
+        if (
+          contentPost.data['content.link_poster_image'] &&
+          contentPost.data['content.link_poster_image'].value &&
+          contentPost.data['content.link_poster_image'].value.main &&
+          contentPost.data['content.link_poster_image'].value.main.url
+        ) {
+          posterURL = contentPost.data['content.link_poster_image'].value.main.url
+        }
+        let posterPromise = ipfs.addFile(posterURL)
+        contentPromiseArray.push(posterPromise)
+
+        Promise.all([linkPromise, posterPromise]).then(ipfs => {
           let baseContent = {}
-          baseContent.hash = ipfs[0].hash
+          if (ipfs[0] && ipfs[0][0]) {
+            baseContent.hash = ipfs[0][0].hash
+            baseContent.size = ipfs[0][0].size
+          }
+          // Write poster image hash
+          if (ipfs[1] && ipfs[1][0]) {
+            baseContent.poster = ipfs[1][0].hash
+          }
           baseContent.title = tempContent.title
           baseContent.media = tempContent.media
+          baseContent.hierarchy = tempContent.hierarchy
           baseContent.id = tempContent.id
           data.transformed.files.push(baseContent)
         })

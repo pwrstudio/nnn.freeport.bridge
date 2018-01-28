@@ -13,44 +13,53 @@ module.exports = data => {
       tempExhibition.slug = exhibition.slug
       tempExhibition.location = {}
 
+      // TITLE
       if (exhibition.data['exhibition.title']) {
         tempExhibition.title = exhibition.data['exhibition.title'].value[0].text
       }
 
+      // DESCRIPTION
       if (exhibition.data['exhibition.description']) {
         tempExhibition.description = exhibition.data['exhibition.description'].value.text
       }
 
+      // START DATE
       if (exhibition.data['exhibition.start_date']) {
         tempExhibition.start_date = exhibition.data['exhibition.start_date'].value
       }
 
+      // END DATE
       if (exhibition.data['exhibition.end_date']) {
         tempExhibition.end_date = exhibition.data['exhibition.end_date'].value
       }
 
+      // FESTIVAL
       if (exhibition.data['exhibition.festival']) {
         tempExhibition.festival = exhibition.data['exhibition.festival'].value[0].text
       }
 
+      // VENUE
       if (exhibition.data['exhibition.venue']) {
         tempExhibition.location.venue = exhibition.data['exhibition.venue'].value[0].text
       }
 
+      // CITY
       if (exhibition.data['exhibition.city']) {
         tempExhibition.location.city = exhibition.data['exhibition.city'].value[0].text
       }
 
+      // COUNTRY
       if (exhibition.data['exhibition.country']) {
         tempExhibition.location.country = exhibition.data['exhibition.country'].value[0].text
       }
 
+      // GEOPOINTS
       if (exhibition.data['exhibition.location']) {
         tempExhibition.location.geopoint = exhibition.data['exhibition.location'].value
       }
 
+      // WORKS
       tempExhibition.works = []
-
       if (exhibition.data['exhibition.works']) {
         exhibition.data['exhibition.works'].value.map(work => {
           if (work.work && work.work.value) {

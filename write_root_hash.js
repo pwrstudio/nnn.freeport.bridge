@@ -5,6 +5,9 @@ module.exports = data => {
   return new Promise((resolve, reject) => {
     console.log('– Writing root document'.yellow)
 
+    // Add timestamp
+    data.transformed.updated = new Date()
+
     ipfs
       .addText(Buffer.from(JSON.stringify(data.transformed)))
       .then(data => {
