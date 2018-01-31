@@ -9,8 +9,6 @@ module.exports = data => {
       about: {}
     }
 
-    // console.log(JSON.stringify(data, null, 4))
-
     let about = data.find(post => post.type === 'about_page')
 
     // INFO
@@ -19,22 +17,17 @@ module.exports = data => {
       helpers.linkResolver
     )
 
-    console.log(data.transformed.about.info)
-
     // TECH
     data.transformed.about.tech = PrismicDOM.RichText.asHtml(
       about.rawJSON.tech,
       helpers.linkResolver
     )
 
-    console.log(data.transformed.about.tech)
-
     // CREDITS
     data.transformed.about.credits = PrismicDOM.RichText.asHtml(
       about.rawJSON.credits,
       helpers.linkResolver
     )
-    console.log(data.transformed.about.credits)
 
     console.log('✓ About page added'.green)
 

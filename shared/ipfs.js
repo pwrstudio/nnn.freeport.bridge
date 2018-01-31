@@ -17,57 +17,57 @@ module.exports = {
   },
   addFile: url => {
     return new Promise((resolve, reject) => {
+      // Fallback if url is empty
       if (!url) {
-        url = 'http://via.placeholder.com/350x150'
+        url = 'http://xxx.xxx'
       }
+      // console.log(url)
+      // Fetch the file from prismic
       request
         .get(url, (error, response, body) => {
+          // If successfully fetched...
           if (!error && response.statusCode == 200) {
+            // Get the IPFS hash without uploading
             ipfs.add(Buffer.from(body), {'only-hash': true}, (err, check) => {
-              if (check[0]) {
-                ipfs.cat(check[0].hash, (err, fileCheck) => {
-                  if (fileCheck) {
-                    console.log(check[0].hash, 'already added'.green)
-                    console.count('finished'.blue)
-                    resolve(check)
-                  } else {
-                    console.log(check[0].hash, 'not added. adding...'.cyan)
-                    ipfs.add(
-                      Buffer.from(body),
-                      {
-                        progress: data => console.log(String(url).yellow, data, '/', body.length)
-                      },
-                      (err, data) => {
-                        console.log(err, data)
-                        if (!err && data[0] && data[0].hash) {
-                          console.log(String(url).yellow, ' =>'.cyan, String(data[0].hash).green)
-                          console.count('finished'.green)
-                          resolve(data)
-                        } else {
-                          console.log('NO HASH'.red)
-                          console.log(data)
-                          console.log(err)
-                          console.log(String(url).red)
-                          console.log(Buffer.from(body).length)
-                          resolve([{hash: '0x'}])
-                        }
-                      }
-                    )
-                  }
-                })
-              } else {
-                resolve([{hash: '0x'}])
-              }
+              // console.log('check', check[0].hash)
+              // check : hash
+              // if (check[0]) {
+              // Try to read the file
+              // ipfs.cat(check[0].hash, (err, fileCheck) => {
+              // File is ALREADY uploaded
+              // if (fileCheck) {
+              // console.log(check[0].hash, 'already added'.green)
+              // resolve(check)
+              // File is NOT uploaded
+              // } else {
+              // console.log('err', err)
+              // console.log(check[0].hash, 'not added. adding...'.cyan)
+              // Add the file to IPFS
+              ipfs.add(Buffer.from(body), {}, (err, data) => {
+                // File was successfully added to IPFs
+                if (!err && data[0] && data[0].hash) {
+                  console.log(String(url).yellow, ' =>'.cyan, String(data[0].hash).green)
+                  resolve(data)
+                } else {
+                  console.log('NO HASH'.red)
+                  resolve([{hash: check[0].hash}])
+                }
+              })
+              // }
             })
+            // } else {
+            //   resolve([{hash: '0x'}])
+            // }
+            // })
           } else {
+            // Request to prismic failed
             console.log('request error:'.red, error)
-
             reject(error)
           }
         })
         .on('error', error => {
+          // Request to prismic failed
           console.log('on error', error)
-
           reject(error)
         })
     })

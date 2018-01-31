@@ -36,7 +36,11 @@ module.exports = data => {
 
       contentPromise.then(ipfs => {
         let baseContent = {}
-        baseContent.hash = ipfs[0].hash
+        if (ipfs && ipfs[0] && ipfs[0].hash) {
+          baseContent.hash = ipfs[0].hash
+        } else {
+          baseContent.hash = ''
+        }
         baseContent.id = tempContent.id
 
         data.transformed.content.push(baseContent)

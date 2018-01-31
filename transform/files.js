@@ -1,6 +1,6 @@
 const PrismicDOM = require('prismic-dom')
 const colors = require('colors')
-const {extract} = require('oembed-parser')
+// const {extract} = require('oembed-parser')
 const ipfs = require('../shared/ipfs.js')
 const helpers = require('../shared/helpers.js')
 
@@ -34,7 +34,7 @@ module.exports = data => {
       // TEXT
       // TEXT
       if (tempContent.media === 'Text') {
-        console.log('/ Text:'.cyan, tempContent.title)
+        // console.log('/ Text:'.cyan, tempContent.title)
 
         let textContent = ''
 
@@ -61,12 +61,13 @@ module.exports = data => {
         // IMAGE
         // IMAGE
       } else if (tempContent.media === 'Image') {
-        console.log('/ Image:'.cyan, tempContent.title)
+        // console.log('/ Image:'.cyan, tempContent.title)
 
         let imageURL = ''
         if (contentPost.rawJSON.image) {
           imageURL = contentPost.rawJSON.image.url
         }
+        console.log(String(contentPost.rawJSON.title[0].text).yellow, contentPost.rawJSON.image.url)
         let imagePromise = ipfs.addFile(imageURL)
         contentPromiseArray.push(imagePromise)
         imagePromise.then(ipfs => {
@@ -92,7 +93,7 @@ module.exports = data => {
         // AUDIO
         // AUDIO
       } else if (tempContent.media === 'Audio') {
-        console.log('/ Audio:'.cyan, tempContent.title)
+        // console.log('/ Audio:'.cyan, tempContent.title)
 
         let audioURL = ''
         // Add audio file
@@ -132,7 +133,7 @@ module.exports = data => {
         // VIDEO
         // VIDEO
       } else if (tempContent.media === 'Video') {
-        console.log('/ Video:'.cyan, tempContent.title)
+        // console.log('/ Video:'.cyan, tempContent.title)
 
         let videoURL = ''
         if (contentPost.rawJSON.video && contentPost.rawJSON.video.url) {
@@ -157,7 +158,7 @@ module.exports = data => {
         // FILE
         // FILE
       } else if (tempContent.media === 'File') {
-        console.log('/ File:'.cyan, tempContent.title)
+        // console.log('/ File:'.cyan, tempContent.title)
 
         let fileURL = ''
         if (contentPost.rawJSON.file && contentPost.rawJSON.file.url) {
@@ -196,29 +197,13 @@ module.exports = data => {
         // LINK
         // LINK
       } else if (tempContent.media === 'External link') {
-        console.log('/ Link:'.cyan, tempContent.title)
+        // console.log('/ Link:'.cyan, tempContent.title)
 
         // Add link
         let linkURL = ''
         if (contentPost.rawJSON.external_link && contentPost.rawJSON.external_link.url) {
           linkURL = contentPost.rawJSON.external_link.url
         }
-
-        // Get oembed info
-        // if (linkURL.length > 0) {
-        //   extract(linkURL).then(data => {
-        //     var linkPromise = ipfs.addText({
-        //       url: linkURL,
-        //       oembed: data
-        //     })
-        //     contentPromiseArray.push(linkPromise)
-        //   })
-        // } else {
-        //   var linkPromise = ipfs.addText({
-        //     url: linkURL
-        //   })
-        //   contentPromiseArray.push(linkPromise)
-        // }
 
         var linkPromise = ipfs.addText(linkURL)
         contentPromiseArray.push(linkPromise)
