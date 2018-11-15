@@ -1,6 +1,6 @@
 const ipfsAPI = require('ipfs-api')
-const ipfs = ipfsAPI({host: 'ipfs.infura.io', port: '5001', protocol: 'https'})
-const request = require('request').defaults({encoding: null})
+const ipfs = ipfsAPI({ host: 'ipfsnode.de', port: '5002', protocol: 'https' })
+const request = require('request').defaults({ encoding: null })
 const colors = require('colors')
 
 module.exports = {
@@ -28,7 +28,7 @@ module.exports = {
           // If successfully fetched...
           if (!error && response.statusCode == 200) {
             // Get the IPFS hash without uploading
-            ipfs.add(Buffer.from(body), {'only-hash': true}, (err, check) => {
+            ipfs.add(Buffer.from(body), { 'only-hash': true }, (err, check) => {
               // console.log('check', check[0].hash)
               // check : hash
               // if (check[0]) {
@@ -50,7 +50,7 @@ module.exports = {
                   resolve(data)
                 } else {
                   console.log('NO HASH'.red)
-                  resolve([{hash: check[0].hash}])
+                  resolve([{ hash: check[0].hash }])
                 }
               })
               // }

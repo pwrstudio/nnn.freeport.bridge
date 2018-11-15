@@ -38,7 +38,7 @@ module.exports = data => {
 
         let textContent = ''
 
-        if (contentPost.rawJSON.text) {
+        if (contentPost.rawJSON && contentPost.rawJSON.text) {
           textContent = PrismicDOM.RichText.asHtml(contentPost.rawJSON.text, helpers.linkResolver)
         }
         let textPromise = ipfs.addText(textContent)
@@ -67,7 +67,8 @@ module.exports = data => {
         if (contentPost.rawJSON.image) {
           imageURL = contentPost.rawJSON.image.url
         }
-        console.log(String(contentPost.rawJSON.title[0].text).yellow, contentPost.rawJSON.image.url)
+        // console.log(tempContent.title)
+        // console.log(String(contentPost.rawJSON.title[0].text).yellow, contentPost.rawJSON.image.url)
         let imagePromise = ipfs.addFile(imageURL)
         contentPromiseArray.push(imagePromise)
         imagePromise.then(ipfs => {
@@ -236,6 +237,7 @@ module.exports = data => {
         })
       }
     })
+
     Promise.all(contentPromiseArray)
       .then(() => {
         console.log('\n✓ All files processed'.green)
