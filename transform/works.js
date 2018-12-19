@@ -15,8 +15,6 @@ module.exports = data => {
       let tempWork = {}
       tempWork.id = work.id
 
-      // console.log(JSON.stringify(work, null, 4))
-
       // TITLE
       tempWork.title = ''
       if (work.rawJSON.title) {
@@ -51,17 +49,18 @@ module.exports = data => {
       // CONTENT
       tempWork.content = []
       if (work.rawJSON.content) {
+        console.log('title', tempWork.title.red, work.rawJSON.content.length)
         work.rawJSON.content.map(content => {
-          if (content.content_item) {
-            let matchingContent = data.transformed.content.find(
-              e => e.id === content.content_item.id
-            )
-            if (matchingContent) {
-              tempWork.content.push(matchingContent)
-            }
+          let matchingContent = data.transformed.content.filter(
+            e => e.id === content.content_item.id
+          )
+          if (matchingContent) {
+            matchingContent.forEach(c => tempWork.content.push(c))
           }
         })
       }
+
+      console.log(tempWork)
 
       // ADD JSON TO IPFS
       let workPromise = ipfs.addText(JSON.stringify(tempWork))

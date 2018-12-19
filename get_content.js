@@ -11,12 +11,10 @@ module.exports = () => {
     fetchPosts = pg => {
       Prismic.api('https://nnnfreeport.prismic.io/api/v2')
         .then(api => {
-          return api.query('', {page: pg, pageSize: 100})
+          return api.query('', { page: pg, pageSize: 100 })
         })
         .then(
           response => {
-            console.log('response.page', response.page)
-            console.log('response.total_pages', response.total_pages)
             if (response.page < response.total_pages) {
               data = data.concat(response.results)
               fetchPosts(++pg)

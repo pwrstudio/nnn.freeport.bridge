@@ -13,9 +13,11 @@ module.exports = data => {
     let contentPromiseArray = []
     data.filter(post => post.type === 'content').map(contentPost => {
       let tempContent = {}
+
       if (contentPost.rawJSON.title) {
         tempContent.title = PrismicDOM.RichText.asText(contentPost.rawJSON.title)
       }
+
       if (contentPost.rawJSON.content_type) {
         tempContent.media = contentPost.rawJSON.content_type
       }
@@ -61,14 +63,10 @@ module.exports = data => {
         // IMAGE
         // IMAGE
       } else if (tempContent.media === 'Image') {
-        // console.log('/ Image:'.cyan, tempContent.title)
-
         let imageURL = ''
         if (contentPost.rawJSON.image) {
           imageURL = contentPost.rawJSON.image.url
         }
-        // console.log(tempContent.title)
-        // console.log(String(contentPost.rawJSON.title[0].text).yellow, contentPost.rawJSON.image.url)
         let imagePromise = ipfs.addFile(imageURL)
         contentPromiseArray.push(imagePromise)
         imagePromise.then(ipfs => {
@@ -234,6 +232,30 @@ module.exports = data => {
         })
         linkPromise.catch(err => {
           console.log('LINK: Caught error:'.red, String(err).red)
+        })
+      } else if (tempContent.media === 'Image set') {
+        contentPost.rawJSON.image_set.forEach(i => {
+          let imageURL = ''
+          if (i.image1) {
+            imageURL = i.image1.url
+          }
+          let imagePromise = ipfs.addFile(imageURL)
+          contentPromiseArray.push(imagePromise)
+          imagePromise.then(ipfs => {
+            console.log('image from set uploaded: ', tempContent.id)
+            let baseContent = {}
+            baseContent.hash = ipfs[0].hash
+            baseContent.size = ipfs[0].size
+            baseContent.title = tempContent.title
+            baseContent.media = tempContent.media
+            baseContent.hierarchy = tempContent.hierarchy
+            baseContent.id = tempContent.id
+            console.log(baseContent)
+            data.transformed.files.push(baseContent)
+          })
+          imagePromise.catch(err => {
+            console.log('IMAGE SET: Caught error:'.red, String(err).red)
+          })
         })
       }
     })

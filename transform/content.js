@@ -27,7 +27,6 @@ module.exports = data => {
       tempContent.caption = file.caption
       // HIERARCHY
       tempContent.hierarchy = file.hierarchy
-      // console.log('hierarchy', file.hierarchy)
 
       // ADD JSON TO IPFS
       let contentPromise = ipfs.addText(JSON.stringify(tempContent))
@@ -42,6 +41,10 @@ module.exports = data => {
           baseContent.hash = ''
         }
         baseContent.id = tempContent.id
+
+        if (tempContent.media === 'Image set') {
+          console.log(tempContent)
+        }
 
         data.transformed.content.push(baseContent)
       })
