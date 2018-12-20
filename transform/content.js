@@ -27,6 +27,10 @@ module.exports = data => {
       tempContent.caption = file.caption
       // HIERARCHY
       tempContent.hierarchy = file.hierarchy
+      // ORDER 
+      if (file.order) {
+        tempContent.order = file.order
+      }
 
       // ADD JSON TO IPFS
       let contentPromise = ipfs.addText(JSON.stringify(tempContent))
@@ -42,9 +46,9 @@ module.exports = data => {
         }
         baseContent.id = tempContent.id
 
-        if (tempContent.media === 'Image set') {
-          console.log(tempContent)
-        }
+        // if (tempContent.media === 'Image set') {
+        //   console.log(tempContent)
+        // }
 
         data.transformed.content.push(baseContent)
       })

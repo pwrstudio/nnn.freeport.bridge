@@ -60,7 +60,7 @@ module.exports = data => {
         })
       }
 
-      console.log(tempWork)
+      // console.log(tempWork)
 
       // ADD JSON TO IPFS
       let workPromise = ipfs.addText(JSON.stringify(tempWork))

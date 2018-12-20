@@ -196,8 +196,6 @@ module.exports = data => {
         // LINK
         // LINK
       } else if (tempContent.media === 'External link') {
-        // console.log('/ Link:'.cyan, tempContent.title)
-
         // Add link
         let linkURL = ''
         if (contentPost.rawJSON.external_link && contentPost.rawJSON.external_link.url) {
@@ -234,23 +232,28 @@ module.exports = data => {
           console.log('LINK: Caught error:'.red, String(err).red)
         })
       } else if (tempContent.media === 'Image set') {
-        contentPost.rawJSON.image_set.forEach(i => {
+        console.log(contentPost.rawJSON.image_set)
+        contentPost.rawJSON.image_set.forEach((i, index) => {
           let imageURL = ''
           if (i.image1) {
             imageURL = i.image1.url
           }
+          // console.log(i)
+          // console.log(index)
+          // Pass on the correct order
+          var baseContent = {}
+          baseContent.order = index
+          baseContent.title = tempContent.title
+          baseContent.media = tempContent.media
+          baseContent.hierarchy = tempContent.hierarchy
+          baseContent.id = tempContent.id
+          baseContent.caption = PrismicDOM.RichText.asHtml(i.caption1, helpers.linkResolver)
           let imagePromise = ipfs.addFile(imageURL)
           contentPromiseArray.push(imagePromise)
           imagePromise.then(ipfs => {
-            console.log('image from set uploaded: ', tempContent.id)
-            let baseContent = {}
+            // console.log('image from set uploaded: ', tempContent.id)
             baseContent.hash = ipfs[0].hash
             baseContent.size = ipfs[0].size
-            baseContent.title = tempContent.title
-            baseContent.media = tempContent.media
-            baseContent.hierarchy = tempContent.hierarchy
-            baseContent.id = tempContent.id
-            console.log(baseContent)
             data.transformed.files.push(baseContent)
           })
           imagePromise.catch(err => {

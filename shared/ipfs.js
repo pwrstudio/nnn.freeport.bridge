@@ -1,5 +1,5 @@
 const ipfsAPI = require('ipfs-api')
-const ipfs = ipfsAPI({ host: 'ipfsnode.de', port: '5002', protocol: 'https' })
+const ipfs = ipfsAPI({ domains: 'ipfsnode.de', port: '5002', protocol: 'https' })
 const request = require('request').defaults({ encoding: null })
 const colors = require('colors')
 
