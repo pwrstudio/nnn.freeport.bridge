@@ -36,7 +36,6 @@ module.exports = data => {
       // TEXT
       // TEXT
       if (tempContent.media === 'Text') {
-        // console.log('/ Text:'.cyan, tempContent.title)
 
         let textContent = ''
 
@@ -232,14 +231,11 @@ module.exports = data => {
           console.log('LINK: Caught error:'.red, String(err).red)
         })
       } else if (tempContent.media === 'Image set') {
-        console.log(contentPost.rawJSON.image_set)
         contentPost.rawJSON.image_set.forEach((i, index) => {
           let imageURL = ''
           if (i.image1) {
             imageURL = i.image1.url
           }
-          // console.log(i)
-          // console.log(index)
           // Pass on the correct order
           var baseContent = {}
           baseContent.order = index
@@ -251,7 +247,6 @@ module.exports = data => {
           let imagePromise = ipfs.addFile(imageURL)
           contentPromiseArray.push(imagePromise)
           imagePromise.then(ipfs => {
-            // console.log('image from set uploaded: ', tempContent.id)
             baseContent.hash = ipfs[0].hash
             baseContent.size = ipfs[0].size
             data.transformed.files.push(baseContent)
