@@ -1,10 +1,7 @@
 const Web3 = require('web3')
 const Tx = require('ethereumjs-tx')
-const colors = require('colors')
-const Raven = require('raven')
 
-const web3 = new Web3()
-web3.setProvider(new web3.providers.HttpProvider('https://rinkeby.infura.io/35d16cN6cJHiZGlnWfZ2'))
+const web3 = new Web3('https://rinkeby.infura.io/35d16cN6cJHiZGlnWfZ2')
 
 const CONTRACT_ADDRESS = '0x737A4FA0eDBcc8c29d74cd2cebA315314E2C608A'
 
@@ -56,10 +53,10 @@ function sendSigned(txData, cb) {
 
 module.exports = rootHash => {
   return new Promise((resolve, reject) => {
-    console.log('– Writing to Blockchain...'.yellow)
+    console.log('– Writing to Blockchain...')
 
     web3.eth.getTransactionCount(addressFrom).then(txCount => {
-      console.log('✓ Root hash:'.green, String(rootHash).green)
+      console.log('✓ Root hash:', rootHash)
 
       const txData = {
         nonce: web3.utils.toHex(txCount),
@@ -77,10 +74,7 @@ module.exports = rootHash => {
           reject('ERROR')
         }
 
-        console.log('✓ Transaction sent:'.green, String(result).green)
-        Raven.captureMessage('✓ NNN container updated. Root hash: ' + rootHash, {
-          level: 'info'
-        })
+        console.log('✓ Transaction sent:', result)
         resolve('OK')
       })
     })

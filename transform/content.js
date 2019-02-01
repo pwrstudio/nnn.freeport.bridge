@@ -1,10 +1,9 @@
-const colors = require('colors')
 const ipfs = require('../shared/ipfs.js')
 const bytes = require('bytes')
 
 module.exports = data => {
   return new Promise((resolve, reject) => {
-    console.log('– Transforming content'.yellow)
+    console.log('– Transforming content')
 
     data.transformed.content = []
     let contentPromiseArray = []
@@ -51,12 +50,12 @@ module.exports = data => {
 
     Promise.all(contentPromiseArray)
       .then(() => {
-        console.log('✓ All content processed'.green)
+        console.log('✓ All content processed')
 
         resolve(data)
       })
       .catch(err => {
-        console.log('content promise rejection'.red, err)
+        console.log('content promise rejection', err)
 
         reject(err)
       })

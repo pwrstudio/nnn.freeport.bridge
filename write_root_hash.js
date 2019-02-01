@@ -1,9 +1,8 @@
-const colors = require('colors')
 const ipfs = require('./shared/ipfs.js')
 
 module.exports = data => {
   return new Promise((resolve, reject) => {
-    console.log('– Writing root document'.yellow)
+    console.log('– Writing root document')
 
     // Add timestamp
     data.transformed.updated = new Date()

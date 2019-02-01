@@ -1,11 +1,10 @@
-const colors = require('colors')
 const ipfs = require('../shared/ipfs.js')
 const PrismicDOM = require('prismic-dom')
 const helpers = require('../shared/helpers.js')
 
 module.exports = data => {
   return new Promise((resolve, reject) => {
-    console.log('– Transforming works'.yellow)
+    console.log('– Transforming works')
 
     data.transformed.works = []
     let workPromiseArray = []
@@ -77,12 +76,12 @@ module.exports = data => {
 
     Promise.all(workPromiseArray)
       .then(() => {
-        console.log('✓ All works processed'.green)
+        console.log('✓ All works processed')
 
         resolve(data)
       })
       .catch(err => {
-        console.log('work promise rejection'.red, err)
+        console.log('work promise rejection', err)
 
         reject(err)
       })

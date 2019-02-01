@@ -1,9 +1,8 @@
 const Prismic = require('prismic.io')
-const colors = require('colors')
 
 module.exports = () => {
   return new Promise((resolve, reject) => {
-    console.log('– Getting content from prismic'.yellow)
+    console.log('– Getting content from prismic')
 
     var data = []
 
@@ -20,7 +19,7 @@ module.exports = () => {
               fetchPosts(++pg)
             } else {
               data = data.concat(response.results)
-              console.log('✓ Received content:'.green, String(data.length).green.underline)
+              console.log('✓ Received content:', data.length)
               resolve(data)
             }
           },

@@ -1,38 +1,26 @@
 {
   "name": "nnn.freeport.bridge",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "",
   "main": "server.js",
-  "scripts": {
-    "test": "jest"
-  },
   "author": "PWR Studio",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/pwrstudio/nnn.freeport.bridge.git"
   },
-  "jest": {
-    "verbose": true
+  "engines": {
+    "node": ">=10.0.0"
   },
   "dependencies": {
     "body-parser": "^1.18.3",
-    "bytes": "^3.0.0",
-    "colors": "^1.3.2",
+    "bytes": "^3.1.0",
     "ethereumjs-tx": "^1.3.7",
     "express": "^4.16.4",
-    "ipfs-http-client": "^28.1.0",
-    "is-ipfs": "^0.4.7",
-    "oembed-parser": "^1.2.0",
+    "ipfs-http-client": "^29.1.0",
     "prismic-dom": "^2.1.0",
     "prismic.io": "^3.6.1",
-    "raven": "^2.4.0",
     "request": "^2.88.0",
-    "to-markdown": "^3.1.1",
-    "web3": "1.0.0-beta.36"
-  },
-  "devDependencies": {
-    "jest": "^23.6.0",
-    "jest-cli": "^23.6.0"
+    "web3": "1.0.0-beta.41"
   }
 }

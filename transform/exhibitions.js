@@ -1,4 +1,3 @@
-const colors = require('colors')
 const ipfs = require('../shared/ipfs.js')
 const PrismicDOM = require('prismic-dom')
 const helpers = require('../shared/helpers.js')
@@ -93,12 +92,12 @@ module.exports = data => {
 
     Promise.all(exhibitionPromiseArray)
       .then(() => {
-        console.log('✓ All exhibitions processed'.green)
+        console.log('✓ All exhibitions processed')
 
         resolve(data)
       })
       .catch(err => {
-        console.log('exhibition promise rejection'.red, err)
+        console.log('exhibition promise rejection', err)
 
         reject(err)
       })

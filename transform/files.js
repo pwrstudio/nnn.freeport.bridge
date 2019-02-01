@@ -1,12 +1,10 @@
 const PrismicDOM = require('prismic-dom')
-const colors = require('colors')
-// const {extract} = require('oembed-parser')
 const ipfs = require('../shared/ipfs.js')
 const helpers = require('../shared/helpers.js')
 
 module.exports = data => {
   return new Promise((resolve, reject) => {
-    console.log('Transforming files...'.yellow)
+    console.log('Transforming files...')
 
     data.transformed.files = []
 
@@ -55,7 +53,7 @@ module.exports = data => {
           data.transformed.files.push(baseContent)
         })
         textPromise.catch(err => {
-          console.log('TEXT: Caught error:'.red, String(err).red)
+          console.log('TEXT: Caught error:', err)
         })
         // IMAGE
         // IMAGE
@@ -85,7 +83,7 @@ module.exports = data => {
           data.transformed.files.push(baseContent)
         })
         imagePromise.catch(err => {
-          console.log('IMAGE: Caught error:'.red, String(err).red)
+          console.log('IMAGE: Caught error:', err)
         })
         // AUDIO
         // AUDIO
@@ -125,7 +123,7 @@ module.exports = data => {
           data.transformed.files.push(baseContent)
         })
         audioPromise.catch(err => {
-          console.log('AUDIO: Caught error:'.red, String(err).red)
+          console.log('AUDIO: Caught error:', err)
         })
         // VIDEO
         // VIDEO
@@ -150,7 +148,7 @@ module.exports = data => {
           data.transformed.files.push(baseContent)
         })
         videoPromise.catch(err => {
-          console.log('VIDEO: Caught error:'.red, String(err).red)
+          console.log('VIDEO: Caught error:', err)
         })
         // FILE
         // FILE
@@ -189,7 +187,7 @@ module.exports = data => {
           data.transformed.files.push(baseContent)
         })
         filePromise.catch(err => {
-          console.log('FILE: Caught error:'.red, String(err).red)
+          console.log('FILE: Caught error:', err)
         })
         // LINK
         // LINK
@@ -228,7 +226,7 @@ module.exports = data => {
           data.transformed.files.push(baseContent)
         })
         linkPromise.catch(err => {
-          console.log('LINK: Caught error:'.red, String(err).red)
+          console.log('LINK: Caught error:', err)
         })
       } else if (tempContent.media === 'Image set') {
         contentPost.rawJSON.image_set.forEach((i, index) => {
@@ -252,7 +250,7 @@ module.exports = data => {
             data.transformed.files.push(baseContent)
           })
           imagePromise.catch(err => {
-            console.log('IMAGE SET: Caught error:'.red, String(err).red)
+            console.log('IMAGE SET: Caught error:', err)
           })
         })
       }
@@ -260,11 +258,11 @@ module.exports = data => {
 
     Promise.all(contentPromiseArray)
       .then(() => {
-        console.log('\n✓ All files processed'.green)
+        console.log('\n✓ All files processed')
         resolve(data.sort(helpers.idSort))
       })
       .catch(err => {
-        console.log('file promise rejection'.red, err)
+        console.log('file promise rejection', err)
         reject(err)
       })
   })

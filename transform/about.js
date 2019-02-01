@@ -1,10 +1,9 @@
 const PrismicDOM = require('prismic-dom')
-const colors = require('colors')
 const helpers = require('../shared/helpers.js')
 
 module.exports = data => {
   return new Promise((resolve, reject) => {
-    console.log('– Adding about...'.yellow)
+    console.log('– Adding about...')
     data.transformed = {
       about: {}
     }
@@ -29,7 +28,7 @@ module.exports = data => {
       helpers.linkResolver
     )
 
-    console.log('✓ About page added'.green)
+    console.log('✓ About page added')
 
     resolve(data)
   })
