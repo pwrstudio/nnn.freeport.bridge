@@ -4,7 +4,7 @@ const helpers = require('../shared/helpers.js')
 
 module.exports = data => {
   return new Promise((resolve, reject) => {
-    console.log('- Transforming exhibitions'.yellow)
+    console.log('- Transforming exhibitions')
 
     data.transformed.exhibitions = []
     let exhibitionPromiseArray = []

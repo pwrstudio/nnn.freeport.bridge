@@ -1,6 +1,6 @@
 const ipfsAPI = require('ipfs-http-client')
-const ipfs = ipfsAPI({ host: 'ipfsnode.de', port: '5002', protocol: 'https' })
-// const ipfs = ipfsAPI({ : 'ipfs.infura.io', port: '5002', protocol: 'https' })
+// const ipfs = ipfsAPI({ host: 'ipfsnode.de', port: '5002', protocol: 'https' })
+const ipfs = ipfsAPI({ host: 'ipfs.infura.io', port: '5001', protocol: 'https' })
 const request = require('request').defaults({ encoding: null })
 
 module.exports = {
@@ -30,7 +30,9 @@ module.exports = {
               ipfs.add(Buffer.from(body), {}, (err, data) => {
                 // File was successfully added to IPFs
                 if (!err && data[0] && data[0].hash) {
-                  console.log(String(url), ' =>'.cyan, String(data[0].hash))
+                  console.log('✔ ', String(url).replace(
+                    'https://nnnfreeport.cdn.prismic.io/nnnfreeport/', ''
+                  ), ' ===>', String(data[0].hash))
                   resolve(data)
                 } else {
                   console.log('!! NO HASH')

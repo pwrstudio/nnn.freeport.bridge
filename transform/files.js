@@ -89,7 +89,6 @@ module.exports = data => {
         // AUDIO
         // AUDIO
       } else if (tempContent.media === 'Audio') {
-        // console.log('/ Audio:'.cyan, tempContent.title)
 
         let audioURL = ''
         // Add audio file
@@ -129,7 +128,6 @@ module.exports = data => {
         // VIDEO
         // VIDEO
       } else if (tempContent.media === 'Video') {
-        // console.log('/ Video:'.cyan, tempContent.title)
 
         let videoURL = ''
         if (contentPost.rawJSON.video && contentPost.rawJSON.video.url) {
@@ -154,7 +152,6 @@ module.exports = data => {
         // FILE
         // FILE
       } else if (tempContent.media === 'File') {
-        // console.log('/ File:'.cyan, tempContent.title)
 
         let fileURL = ''
         if (contentPost.rawJSON.file && contentPost.rawJSON.file.url) {

@@ -48,7 +48,7 @@ module.exports = data => {
       // CONTENT
       tempWork.content = []
       if (work.rawJSON.content) {
-        console.log('title', tempWork.title.red, work.rawJSON.content.length)
+        console.log('title', tempWork.title, work.rawJSON.content.length)
         work.rawJSON.content.map(content => {
           let matchingContent = data.transformed.content.filter(
             e => e.id === content.content_item.id

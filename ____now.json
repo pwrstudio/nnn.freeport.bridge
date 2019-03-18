@@ -1,0 +1,19 @@
+{
+    "version": 2,
+    "name": "nnn.freeport.bridge",
+    "builds": [
+        {
+            "src": "server.js",
+            "use": "@now/node"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "methods": [
+                "POST"
+            ],
+            "dest": "server.js"
+        }
+    ]
+}
