@@ -1,10 +1,19 @@
 const ipfsAPI = require('ipfs-http-client')
 // const ipfs = ipfsAPI({ host: 'ipfsnode.de', port: '5002', protocol: 'https' })
-const ipfs = ipfsAPI({ host: 'ipfs.infura.io', port: '5001', protocol: 'https' })
+// const ipfs = ipfsAPI({ host: 'ipfs.infura.io', port: '5001', protocol: 'https' })
+// const ipfs = ipfsAPI({ host: '52.3.226.116', port: '5001', protocol: 'http' })
+// const ipfs = ipfsAPI({ host: 'ninetailed.ninja', port: '5001', protocol: 'https' })
+// https://ninetailed.ninja/
+const ipfs = ipfsAPI({ host: 'localhost', port: '5001', protocol: 'http' })
+
 const request = require('request').defaults({ encoding: null })
 
 module.exports = {
   addText: text => {
+
+    // console.log(text)
+    // console.log(Buffer.from(text))
+
     return new Promise((resolve, reject) => {
       ipfs
         .add(Buffer.from(text))
@@ -28,7 +37,7 @@ module.exports = {
             // Get the IPFS hash without uploading x
             ipfs.add(Buffer.from(body), { 'only-hash': true }, (err, check) => {
               ipfs.add(Buffer.from(body), {}, (err, data) => {
-                // File was successfully added to IPFs
+                // File was successfully added to IPFS
                 if (!err && data[0] && data[0].hash) {
                   console.log('✔ ', String(url).replace(
                     'https://nnnfreeport.cdn.prismic.io/nnnfreeport/', ''

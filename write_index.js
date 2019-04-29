@@ -3,6 +3,8 @@ const Tx = require('ethereumjs-tx')
 
 const web3 = new Web3('https://rinkeby.infura.io/35d16cN6cJHiZGlnWfZ2')
 
+// rinkeby.infura.io/v3/3d2d5b2739fc44a591923bb48635b515
+
 const CONTRACT_ADDRESS = '0x737A4FA0eDBcc8c29d74cd2cebA315314E2C608A'
 
 const abi = [
