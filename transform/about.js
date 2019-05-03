@@ -1,9 +1,10 @@
 const PrismicDOM = require('prismic-dom')
 const helpers = require('../shared/helpers.js')
+const logUpdate = require('log-update')
 
 module.exports = data => {
   return new Promise((resolve, reject) => {
-    console.log('– Adding about...')
+    logUpdate('– Adding about...')
     data.transformed = {
       about: {}
     }
@@ -28,7 +29,8 @@ module.exports = data => {
       helpers.linkResolver
     )
 
-    console.log('✓ About page added')
+    logUpdate('✓ About page added')
+    logUpdate.done()
 
     resolve(data)
   })

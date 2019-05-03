@@ -1,6 +1,7 @@
 const ipfs = require('../shared/ipfs.js')
 const PrismicDOM = require('prismic-dom')
 const helpers = require('../shared/helpers.js')
+const fs = require('fs')
 
 module.exports = data => {
   return new Promise((resolve, reject) => {
@@ -62,23 +63,29 @@ module.exports = data => {
       // console.log(tempWork)
 
       // ADD JSON TO IPFS
-      let workPromise = ipfs.addText(JSON.stringify(tempWork))
+      let workPromise = ipfs.queueText(tempWork)
 
       workPromiseArray.push(workPromise)
 
-      workPromise.then(ipfs => {
-        let baseWork = {}
-        baseWork.hash = ipfs[0].hash
-        baseWork.id = tempWork.id
-        data.transformed.works.push(baseWork)
-      })
     })
 
     Promise.all(workPromiseArray)
       .then(() => {
-        console.log('✓ All works processed')
+        ipfs.addWorkQueue().then(workArray => {
+          console.log('\n✓ All works processed:', workArray.length)
 
-        resolve(data)
+          fs.writeFile("work.json", JSON.stringify(workArray), (err) => {
+            if (err) {
+              return console.log(err);
+            }
+
+            console.log("The file was saved!");
+          })
+
+          data.transformed.works = workArray
+
+          resolve(data)
+        })
       })
       .catch(err => {
         console.log('work promise rejection', err)

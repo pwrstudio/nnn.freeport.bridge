@@ -1,5 +1,6 @@
 const ipfs = require('../shared/ipfs.js')
 const bytes = require('bytes')
+const fs = require('fs')
 
 module.exports = data => {
   return new Promise((resolve, reject) => {
@@ -30,29 +31,41 @@ module.exports = data => {
       if (file.order) {
         tempContent.order = file.order
       }
+
       // ADD JSON TO IPFS
-      let contentPromise = ipfs.addText(JSON.stringify(tempContent))
+      let contentPromise = ipfs.queueText(tempContent)
 
       contentPromiseArray.push(contentPromise)
 
-      contentPromise.then(ipfs => {
-        let baseContent = {}
-        if (ipfs && ipfs[0] && ipfs[0].hash) {
-          baseContent.hash = ipfs[0].hash
-        } else {
-          baseContent.hash = ''
-        }
-        baseContent.id = tempContent.id
+      // contentPromise.then(ipfs => {
+      //   let baseContent = {}
+      //   if (ipfs && ipfs[0] && ipfs[0].hash) {
+      //     baseContent.hash = ipfs[0].hash
+      //   } else {
+      //     baseContent.hash = ''
+      //   }
+      //   baseContent.id = tempContent.id
 
-        data.transformed.content.push(baseContent)
-      })
+      //   data.transformed.content.push(baseContent)
+      // })
     })
 
     Promise.all(contentPromiseArray)
       .then(() => {
-        console.log('✓ All content processed')
+        ipfs.addContentQueue().then(contentArray => {
+          console.log('\n✓ All content processed:', contentArray.length)
+          data.transformed.content = contentArray
 
-        resolve(data)
+          fs.writeFile("content.json", JSON.stringify(contentArray), (err) => {
+            if (err) {
+              return console.log(err);
+            }
+
+            console.log("The file was saved!");
+          })
+
+          resolve(data)
+        })
       })
       .catch(err => {
         console.log('content promise rejection', err)

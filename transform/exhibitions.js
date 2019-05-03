@@ -1,6 +1,7 @@
 const ipfs = require('../shared/ipfs.js')
 const PrismicDOM = require('prismic-dom')
 const helpers = require('../shared/helpers.js')
+const fs = require('fs')
 
 module.exports = data => {
   return new Promise((resolve, reject) => {
@@ -75,26 +76,38 @@ module.exports = data => {
         })
       }
 
-      let exhibitionPromise = ipfs.addText(JSON.stringify(tempExhibition))
+      let exhibitionPromise = ipfs.queueText(JSON.stringify(tempExhibition))
 
       exhibitionPromiseArray.push(exhibitionPromise)
 
-      exhibitionPromise
-        .then(ipfs => {
-          let baseExhibition = {}
+      // exhibitionPromise
+      //   .then(ipfs => {
+      //     let baseExhibition = {}
 
-          baseExhibition.hash = ipfs[0].hash
+      //     baseExhibition.hash = ipfs[0].hash
 
-          data.transformed.exhibitions.push(baseExhibition)
-        })
-        .catch(reject)
+      //     data.transformed.exhibitions.push(baseExhibition)
+      //   })
+      //   .catch(reject)
     })
 
     Promise.all(exhibitionPromiseArray)
       .then(() => {
-        console.log('✓ All exhibitions processed')
+        ipfs.addExhibitionQueue().then(exhibitionArray => {
+          console.log('\n✓ All exhibitions processed')
 
-        resolve(data)
+          data.transformed.exhibitions = exhibitionArray
+
+          fs.writeFile("exhibitions.json", JSON.stringify(exhibitionArray), (err) => {
+            if (err) {
+              return console.log(err);
+            }
+
+            console.log("The file was saved!");
+          })
+
+          resolve(data)
+        })
       })
       .catch(err => {
         console.log('exhibition promise rejection', err)

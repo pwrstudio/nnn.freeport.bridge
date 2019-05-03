@@ -1,8 +1,9 @@
 const Prismic = require('prismic.io')
+const logUpdate = require('log-update')
 
 module.exports = () => {
   return new Promise((resolve, reject) => {
-    console.log('– Getting content from prismic')
+    logUpdate('– Getting content from prismic')
 
     var data = []
 
@@ -19,7 +20,8 @@ module.exports = () => {
               fetchPosts(++pg)
             } else {
               data = data.concat(response.results)
-              console.log('✓ Received content:', data.length)
+              logUpdate('✓ Received content:', data.length)
+              logUpdate.done()
               resolve(data)
             }
           },

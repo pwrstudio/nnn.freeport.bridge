@@ -35,202 +35,166 @@ module.exports = data => {
       // TEXT
       if (tempContent.media === 'Text') {
 
-        let textContent = ''
+        // Fill in content object
+        let baseContent = {}
+        baseContent.title = tempContent.title
+        baseContent.media = tempContent.media
+        baseContent.hierarchy = tempContent.hierarchy
+        baseContent.id = tempContent.id
+        baseContent.hash = ''
+        baseContent.text = ''
 
         if (contentPost.rawJSON && contentPost.rawJSON.text) {
-          textContent = PrismicDOM.RichText.asHtml(contentPost.rawJSON.text, helpers.linkResolver)
+          baseContent.text = PrismicDOM.RichText.asHtml(contentPost.rawJSON.text, helpers.linkResolver)
         }
-        let textPromise = ipfs.addText(textContent)
-        contentPromiseArray.push(textPromise)
-        textPromise.then(ipfs => {
-          tempContent.ipfs = ipfs
-          let baseContent = {}
-          baseContent.hash = ipfs[0].hash
-          baseContent.title = tempContent.title
-          baseContent.media = tempContent.media
-          baseContent.hierarchy = tempContent.hierarchy
-          baseContent.id = tempContent.id
-          data.transformed.files.push(baseContent)
-        })
-        textPromise.catch(err => {
-          console.log('TEXT: Caught error:', err)
-        })
+
+        // Add to queue
+        contentPromiseArray.push(ipfs.queueText(baseContent))
+
         // IMAGE
         // IMAGE
         // IMAGE
         // IMAGE
       } else if (tempContent.media === 'Image') {
-        let imageURL = ''
-        if (contentPost.rawJSON.image) {
-          imageURL = contentPost.rawJSON.image.url
+
+        let baseContent = {}
+        baseContent.hash = ''
+        baseContent.size = 0
+        baseContent.title = tempContent.title
+        baseContent.media = tempContent.media
+        baseContent.hierarchy = tempContent.hierarchy
+        baseContent.id = tempContent.id
+        baseContent.url = ''
+
+        // Caption
+        if (contentPost.rawJSON.caption) {
+          baseContent.caption = PrismicDOM.RichText.asHtml(
+            contentPost.rawJSON.caption,
+            helpers.LinkResolver
+          )
         }
-        let imagePromise = ipfs.addFile(imageURL)
+
+        if (contentPost.rawJSON.image) {
+          baseContent.url = contentPost.rawJSON.image.url
+        }
+
+        // Queue file
+        let imagePromise = ipfs.queueFile(baseContent)
+
         contentPromiseArray.push(imagePromise)
-        imagePromise.then(ipfs => {
-          let baseContent = {}
-          baseContent.hash = ipfs[0].hash
-          baseContent.size = ipfs[0].size
-          baseContent.title = tempContent.title
-          baseContent.media = tempContent.media
-          baseContent.hierarchy = tempContent.hierarchy
-          baseContent.id = tempContent.id
-          if (contentPost.rawJSON.caption) {
-            baseContent.caption = PrismicDOM.RichText.asHtml(
-              contentPost.rawJSON.caption,
-              helpers.LinkResolver
-            )
-          }
-          data.transformed.files.push(baseContent)
-        })
-        imagePromise.catch(err => {
-          console.log('IMAGE: Caught error:', err)
-        })
+
         // AUDIO
         // AUDIO
         // AUDIO
       } else if (tempContent.media === 'Audio') {
 
-        let audioURL = ''
+        // Fill in content object
+        let baseContent = {}
+        baseContent.hash = ''
+        baseContent.size = 0
+        baseContent.title = tempContent.title
+        baseContent.media = tempContent.media
+        baseContent.hierarchy = tempContent.hierarchy
+        baseContent.id = tempContent.id
+        baseContent.url = ''
+
         // Add audio file
         if (contentPost.rawJSON.audio && contentPost.rawJSON.audio.url) {
-          audioURL = contentPost.rawJSON.audio.url
+          baseContent.url = contentPost.rawJSON.audio.url
         }
-        let audioPromise = ipfs.addFile(audioURL)
-        contentPromiseArray.push(audioPromise)
 
         // Add audio poster image
         if (contentPost.rawJSON.audio_poster_image && contentPost.rawJSON.audio_poster_image.url) {
-          let posterURL = contentPost.rawJSON.audio_poster_image.url
-          var posterPromise = ipfs.addFile(posterURL)
-          contentPromiseArray.push(posterPromise)
+          baseContent.poster = contentPost.rawJSON.audio_poster_image.url
         }
 
-        Promise.all([audioPromise, posterPromise]).then(ipfs => {
-          let baseContent = {}
-          if (ipfs[0] && ipfs[0][0]) {
-            baseContent.hash = ipfs[0][0].hash
-            baseContent.size = ipfs[0][0].size
-          }
-          // Write poster image hash
-          if (ipfs[1] && ipfs[1][0]) {
-            baseContent.poster = ipfs[1][0].hash
-          }
-          baseContent.title = tempContent.title
-          baseContent.media = tempContent.media
-          baseContent.hierarchy = tempContent.hierarchy
-          baseContent.id = tempContent.id
-          data.transformed.files.push(baseContent)
-        })
-        audioPromise.catch(err => {
-          console.log('AUDIO: Caught error:', err)
-        })
+        // Queue file
+        let audioPromise = ipfs.queueFile(baseContent)
+
+        contentPromiseArray.push(audioPromise)
+
         // VIDEO
         // VIDEO
         // VIDEO
       } else if (tempContent.media === 'Video') {
 
-        let videoURL = ''
+        let baseContent = {}
+        baseContent.hash = ''
+        baseContent.size = 0
+        baseContent.title = tempContent.title
+        baseContent.media = tempContent.media
+        baseContent.hierarchy = tempContent.hierarchy
+        baseContent.id = tempContent.id
+        baseContent.url = ''
+
         if (contentPost.rawJSON.video && contentPost.rawJSON.video.url) {
-          videoURL = contentPost.rawJSON.video.url
+          baseContent.url = contentPost.rawJSON.video.url
         }
-        let videoPromise = ipfs.addFile(videoURL)
+
+        // Queue File
+        let videoPromise = ipfs.queueFile(baseContent)
+
         contentPromiseArray.push(videoPromise)
-        videoPromise.then(ipfs => {
-          let baseContent = {}
-          baseContent.hash = ipfs[0].hash
-          baseContent.size = ipfs[0].size
-          baseContent.title = tempContent.title
-          baseContent.media = tempContent.media
-          baseContent.hierarchy = tempContent.hierarchy
-          baseContent.id = tempContent.id
-          data.transformed.files.push(baseContent)
-        })
-        videoPromise.catch(err => {
-          console.log('VIDEO: Caught error:', err)
-        })
+
         // FILE
         // FILE
         // FILE
       } else if (tempContent.media === 'File') {
+        let baseContent = {}
+        baseContent.hash = ''
+        baseContent.size = 0
+        baseContent.title = tempContent.title
+        baseContent.media = tempContent.media
+        baseContent.hierarchy = tempContent.hierarchy
+        baseContent.id = tempContent.id
+        baseContent.url = ''
 
-        let fileURL = ''
         if (contentPost.rawJSON.file && contentPost.rawJSON.file.url) {
-          fileURL = contentPost.rawJSON.file.url
+          baseContent.url = contentPost.rawJSON.file.url
         }
-        let filePromise = ipfs.addFile(fileURL)
-        contentPromiseArray.push(filePromise)
 
         // Add file poster image
         if (contentPost.rawJSON.video_poster_image && contentPost.rawJSON.video_poster_image.url) {
-          let posterURL = contentPost.rawJSON.video_poster_image.url
-          var posterPromise = ipfs.addFile(posterURL)
-          contentPromiseArray.push(posterPromise)
+          baseContent.poster = contentPost.rawJSON.video_poster_image.url
         }
 
-        Promise.all([filePromise, posterPromise]).then(ipfs => {
-          let baseContent = {}
-          if (ipfs[0] && ipfs[0][0]) {
-            baseContent.hash = ipfs[0][0].hash
-            baseContent.size = ipfs[0][0].size
-          }
-          // Write poster image hash
-          if (ipfs[1] && ipfs[1][0]) {
-            baseContent.poster = ipfs[1][0].hash
-          }
-          baseContent.title = tempContent.title
-          baseContent.media = tempContent.media
-          baseContent.hierarchy = tempContent.hierarchy
-          baseContent.id = tempContent.id
-          data.transformed.files.push(baseContent)
-        })
-        filePromise.catch(err => {
-          console.log('FILE: Caught error:', err)
-        })
+        // Queue file
+        let filePromise = ipfs.queueFile(baseContent)
+
+        contentPromiseArray.push(filePromise)
+
         // LINK
         // LINK
         // LINK
       } else if (tempContent.media === 'External link') {
-        // Add link
-        let linkURL = ''
-        if (contentPost.rawJSON.external_link && contentPost.rawJSON.external_link.url) {
-          linkURL = contentPost.rawJSON.external_link.url
-        }
+        let baseContent = {}
+        baseContent.hash = ''
+        baseContent.size = 0
+        baseContent.title = tempContent.title
+        baseContent.media = tempContent.media
+        baseContent.hierarchy = tempContent.hierarchy
+        baseContent.id = tempContent.id
+        baseContent.text = ''
 
-        var linkPromise = ipfs.addText(linkURL)
-        contentPromiseArray.push(linkPromise)
+        // Add link
+        if (contentPost.rawJSON.external_link && contentPost.rawJSON.external_link.url) {
+          baseContent.text = contentPost.rawJSON.external_link.url
+        }
 
         // Add link poster image
         if (contentPost.rawJSON.link_poster_image && contentPost.rawJSON.link_poster_image.url) {
-          let posterURL = contentPost.rawJSON.link_poster_image.url
-          var posterPromise = ipfs.addFile(posterURL)
-          contentPromiseArray.push(posterPromise)
+          baseContent.poster = contentPost.rawJSON.link_poster_image.url
         }
 
-        Promise.all([linkPromise, posterPromise]).then(ipfs => {
-          let baseContent = {}
-          if (ipfs[0] && ipfs[0][0]) {
-            baseContent.hash = ipfs[0][0].hash
-            baseContent.size = ipfs[0][0].size
-          }
-          // Write poster image hash
-          if (ipfs[1] && ipfs[1][0]) {
-            baseContent.poster = ipfs[1][0].hash
-          }
-          baseContent.title = tempContent.title
-          baseContent.media = tempContent.media
-          baseContent.hierarchy = tempContent.hierarchy
-          baseContent.id = tempContent.id
-          data.transformed.files.push(baseContent)
-        })
-        linkPromise.catch(err => {
-          console.log('LINK: Caught error:', err)
-        })
+        // Queue file
+        var linkPromise = ipfs.queueText(baseContent)
+
+        contentPromiseArray.push(linkPromise)
+
       } else if (tempContent.media === 'Image set') {
+        console.log('Image set')
         contentPost.rawJSON.image_set.forEach((i, index) => {
-          let imageURL = ''
-          if (i.image1) {
-            imageURL = i.image1.url
-          }
+
           // Pass on the correct order
           var baseContent = {}
           baseContent.order = index
@@ -239,24 +203,28 @@ module.exports = data => {
           baseContent.hierarchy = tempContent.hierarchy
           baseContent.id = tempContent.id
           baseContent.caption = PrismicDOM.RichText.asHtml(i.caption1, helpers.linkResolver)
-          let imagePromise = ipfs.addFile(imageURL)
+          if (i.image1) {
+            baseContent.url = i.image1.url
+          }
+
+          // Queue file
+          let imagePromise = ipfs.queueFile(baseContent)
+
           contentPromiseArray.push(imagePromise)
-          imagePromise.then(ipfs => {
-            baseContent.hash = ipfs[0].hash
-            baseContent.size = ipfs[0].size
-            data.transformed.files.push(baseContent)
-          })
-          imagePromise.catch(err => {
-            console.log('IMAGE SET: Caught error:', err)
-          })
+
         })
       }
     })
 
     Promise.all(contentPromiseArray)
       .then(() => {
-        console.log('\n✓ All files processed')
-        resolve(data.sort(helpers.idSort))
+        ipfs.addFileQueue().then(fileArray => {
+          console.log('\n✓ All files processed:', fileArray.length)
+
+          data.transformed.files = fileArray
+
+          resolve(data.sort(helpers.idSort))
+        })
       })
       .catch(err => {
         console.log('file promise rejection', err)
